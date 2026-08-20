@@ -1,0 +1,104 @@
+name: Flutter CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build Release APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.5'
+          channel: stable
+          cache: true
+
+      - name: Accept Android licenses
+        run: yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
+
+      - name: Install SDK components
+        run: |
+          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "ndk;27.0.12077973" "platforms;android-35" "build-tools;35.0.0" || true
+
+      - name: Write local.properties
+        run: |
+          FLUTTER_SDK=$(dirname $(dirname $(which flutter)))
+          echo "flutter.sdk=$FLUTTER_SDK" > android/local.properties
+          echo "sdk.dir=$ANDROID_HOME" >> android/local.properties
+          echo "ndk.dir=$ANDROID_HOME/ndk/27.0.12077973" >> android/local.properties
+
+      - name: Write gradlew
+        run: |
+          mkdir -p android/gradle/wrapper
+          FSRC="$FLUTTER_ROOT/packages/flutter_tools/templates/app_shared/android.tmpl/gradlew"
+          if [ -f "$FSRC" ]; then
+            cp "$FSRC" android/gradlew
+          else
+            printf '#!/bin/sh\nAPP_HOME="$(cd "$(dirname "$0")" && pwd)"\nCLASSPATH=$APP_HOME/gradle/wrapper/gradle-wrapper.jar\nexec "$JAVA_HOME/bin/java" -classpath "$CLASSPATH" org.gradle.wrapper.GradleWrapperMain "$@"\n' > android/gradlew
+          fi
+          chmod +x android/gradlew
+
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('android/gradle/wrapper/gradle-wrapper.properties') }}
+          restore-keys: ${{ runner.os }}-gradle-
+
+      - name: Flutter pub get
+        run: flutter pub get
+
+      - name: Patch plugin build.gradle files
+        run: |
+          find "$HOME/.pub-cache" \( -name "build.gradle" -o -name "build.gradle.kts" \) -type f | while IFS= read -r f; do
+            if grep -qE "flutter\.(compileSdk|minSdk|targetSdk|ndk)Version" "$f" 2>/dev/null; then
+              sed -i -e 's/flutter\.compileSdkVersion/35/g' -e 's/flutter\.targetSdkVersion/35/g' -e 's/flutter\.minSdkVersion/26/g' -e 's/flutter\.ndkVersion/"27.0.12077973"/g' "$f"
+              echo "Patched: $f"
+            fi
+          done
+
+      - name: Flutter analyze
+        run: flutter analyze --no-fatal-infos --no-fatal-warnings
+        continue-on-error: true
+
+      - name: Build APK
+        run: flutter build apk --release --no-tree-shake-icons
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: HydroIQ-APK-${{ github.run_number }}
+          path: build/app/outputs/flutter-apk/app-release.apk
+          retention-days: 30
+
+      - name: Create Release
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.${{ github.run_number }}
+          name: HydroIQ v1.0.${{ github.run_number }}
+          body: Auto release — Flutter 3.24.5 · Java 17 · commit ${{ github.sha }}
+          files: build/app/outputs/flutter-apk/app-release.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
