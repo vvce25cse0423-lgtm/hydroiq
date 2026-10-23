@@ -1,29 +1,29 @@
 Add-Type -AssemblyName System.Drawing
 
-$sourcePath = 'C:\Users\Nitin\.gemini\antigravity\brain\d24b3569-91a3-4d58-8b6c-b903fd23b345\.user_uploaded\media_1792762789955_49fd829f.png'
+$sourcePath = 'assets\icons\app_icon_raw.png'
+if (-not (Test-Path $sourcePath)) {
+    Write-Error "Source image $sourcePath not found!"
+    exit 1
+}
+
 $src = [System.Drawing.Bitmap]::FromFile($sourcePath)
 $w = $src.Width
 $h = $src.Height
 
-# Save raw copy
-$src.Save('assets\icons\app_icon_raw.png', [System.Drawing.Imaging.ImageFormat]::Png)
-
-# Create 32-bit ARGB image for transparency processing
-$target = New-Object System.Drawing.Bitmap($w, $h, [System.Drawing.Imaging.PixelFormat]::Format32bppArgb)
-$g = [System.Drawing.Graphics]::FromImage($target)
+# Step 1: Extract button with transparent outer white border
+$btnTarget = New-Object System.Drawing.Bitmap($w, $h, [System.Drawing.Imaging.PixelFormat]::Format32bppArgb)
+$g = [System.Drawing.Graphics]::FromImage($btnTarget)
 $g.DrawImage($src, 0, 0, $w, $h)
 $g.Dispose()
 $src.Dispose()
 
-# Lock bits
 $rect = [System.Drawing.Rectangle]::new(0, 0, $w, $h)
-$data = $target.LockBits($rect, [System.Drawing.Imaging.ImageLockMode]::ReadWrite, [System.Drawing.Imaging.PixelFormat]::Format32bppArgb)
+$data = $btnTarget.LockBits($rect, [System.Drawing.Imaging.ImageLockMode]::ReadWrite, [System.Drawing.Imaging.PixelFormat]::Format32bppArgb)
 $stride = $data.Stride
 $ptr = $data.Scan0
 $bytes = [byte[]]::new($stride * $h)
 [System.Runtime.InteropServices.Marshal]::Copy($ptr, $bytes, 0, $bytes.Length)
 
-# BFS flood fill from 4 corners
 $visited = New-Object "bool[,]" $w, $h
 $queue = New-Object System.Collections.Generic.Queue[System.Drawing.Point]
 
@@ -48,7 +48,6 @@ while ($queue.Count -gt 0) {
     $gVal = $bytes[$idx + 1]
     $r = $bytes[$idx + 2]
 
-    # White background threshold
     if ($r -gt 230 -and $gVal -gt 230 -and $b -gt 230) {
         $bytes[$idx + 3] = 0 # Transparent
         for ($i = 0; $i -lt 4; $i++) {
@@ -65,31 +64,75 @@ while ($queue.Count -gt 0) {
 }
 
 [System.Runtime.InteropServices.Marshal]::Copy($bytes, 0, $ptr, $bytes.Length)
-$target.UnlockBits($data)
+$btnTarget.UnlockBits($data)
 
-# Save main assets (1024x1024)
-$target.Save('assets\icons\app_icon.png', [System.Drawing.Imaging.ImageFormat]::Png)
-$target.Save('assets\images\app_icon.png', [System.Drawing.Imaging.ImageFormat]::Png)
-Write-Output "Saved 1024x1024 icons to assets\icons and assets\images"
+# Step 2: Create full-bleed gradient background matching the HydroIQ theme
+# Radial gradient from bright blue center (#2079BB) to deep navy corners (#0A1E3E)
+$bg1024 = New-Object System.Drawing.Bitmap(1024, 1024, [System.Drawing.Imaging.PixelFormat]::Format32bppArgb)
+$gBg = [System.Drawing.Graphics]::FromImage($bg1024)
+$bgRect = New-Object System.Drawing.Rectangle(0, 0, 1024, 1024)
+$bgPath = New-Object System.Drawing.Drawing2D.GraphicsPath
+$bgPath.AddRectangle($bgRect)
 
-# Helper function to resize with high quality bicubic interpolation
+$pbr = New-Object System.Drawing.Drawing2D.PathGradientBrush($bgPath)
+$pbr.CenterPoint = [System.Drawing.PointF]::new(512, 470)
+$pbr.CenterColor = [System.Drawing.Color]::FromArgb(255, 32, 121, 187) # #2079BB
+$pbr.SurroundColors = @(
+    [System.Drawing.Color]::FromArgb(255, 12, 38, 74),  # Top-Left
+    [System.Drawing.Color]::FromArgb(255, 20, 80, 130), # Top-Right
+    [System.Drawing.Color]::FromArgb(255, 10, 30, 62),  # Bottom-Right
+    [System.Drawing.Color]::FromArgb(255, 10, 30, 62)   # Bottom-Left
+)
+$gBg.FillRectangle($pbr, $bgRect)
+$pbr.Dispose()
+$bgPath.Dispose()
+$gBg.Dispose()
+
+# Step 3: Scale button to fit safely inside the Android Adaptive Icon safe zone (~65% scale)
+$scale = 0.65
+$targetW = [int](1024 * $scale)
+$targetH = [int](1024 * $scale)
+$offsetX = [int]((1024 - $targetW) / 2)
+$offsetY = [int]((1024 - $targetH) / 2)
+
+# 3A: Foreground (scaled button on transparent canvas for adaptive icons)
+$fg1024 = New-Object System.Drawing.Bitmap(1024, 1024, [System.Drawing.Imaging.PixelFormat]::Format32bppArgb)
+$gFg = [System.Drawing.Graphics]::FromImage($fg1024)
+$gFg.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
+$gFg.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::HighQuality
+$gFg.Clear([System.Drawing.Color]::Transparent)
+$gFg.DrawImage($btnTarget, $offsetX, $offsetY, $targetW, $targetH)
+$gFg.Dispose()
+
+# 3B: Pre-composited full icon (background + scaled foreground)
+$composite1024 = New-Object System.Drawing.Bitmap($bg1024)
+$gComp = [System.Drawing.Graphics]::FromImage($composite1024)
+$gComp.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
+$gComp.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::HighQuality
+$gComp.DrawImage($btnTarget, $offsetX, $offsetY, $targetW, $targetH)
+$gComp.Dispose()
+
+$btnTarget.Dispose()
+
+# Helper function to resize with high-quality bicubic interpolation
 function Resize-Image($img, $width, $height, $outPath) {
     $newBmp = New-Object System.Drawing.Bitmap($width, $height, [System.Drawing.Imaging.PixelFormat]::Format32bppArgb)
-    $g = [System.Drawing.Graphics]::FromImage($newBmp)
-    $g.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
-    $g.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::HighQuality
-    $g.PixelOffsetMode = [System.Drawing.Drawing2D.PixelOffsetMode]::HighQuality
-    $g.CompositingQuality = [System.Drawing.Drawing2D.CompositingQuality]::HighQuality
-    $g.Clear([System.Drawing.Color]::Transparent)
-    $g.DrawImage($img, 0, 0, $width, $height)
-    $g.Dispose()
+    $gResize = [System.Drawing.Graphics]::FromImage($newBmp)
+    $gResize.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
+    $gResize.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::HighQuality
+    $gResize.PixelOffsetMode = [System.Drawing.Drawing2D.PixelOffsetMode]::HighQuality
+    $gResize.CompositingQuality = [System.Drawing.Drawing2D.CompositingQuality]::HighQuality
+    $gResize.Clear([System.Drawing.Color]::Transparent)
+    $gResize.DrawImage($img, 0, 0, $width, $height)
+    $gResize.Dispose()
     $newBmp.Save($outPath, [System.Drawing.Imaging.ImageFormat]::Png)
     $newBmp.Dispose()
-    Write-Output "Generated $outPath (${width}x$height)"
 }
 
-# Generate 512x512 icon for Play Store
-Resize-Image $target 512 512 'assets\icons\app_icon_512.png'
+# Save main Flutter assets
+$composite1024.Save('assets\icons\app_icon.png', [System.Drawing.Imaging.ImageFormat]::Png)
+$composite1024.Save('assets\images\app_icon.png', [System.Drawing.Imaging.ImageFormat]::Png)
+Resize-Image $composite1024 512 512 'assets\icons\app_icon_512.png'
 
 # Android mipmap densities and sizes
 $densities = @(
@@ -103,10 +146,14 @@ $densities = @(
 foreach ($d in $densities) {
     $dir = "android\app\src\main\res\mipmap-$($d.Name)"
     $size = $d.Size
-    Resize-Image $target $size $size "$dir\ic_launcher.png"
-    Resize-Image $target $size $size "$dir\ic_launcher_round.png"
-    Resize-Image $target $size $size "$dir\ic_launcher_foreground.png"
+    Resize-Image $composite1024 $size $size "$dir\ic_launcher.png"
+    Resize-Image $composite1024 $size $size "$dir\ic_launcher_round.png"
+    Resize-Image $fg1024 $size $size "$dir\ic_launcher_foreground.png"
+    Resize-Image $bg1024 $size $size "$dir\ic_launcher_background.png"
 }
 
-$target.Dispose()
-Write-Output "All icons successfully generated!"
+$bg1024.Dispose()
+$fg1024.Dispose()
+$composite1024.Dispose()
+
+Write-Output "Successfully generated safe-zone scaled icons for all Android densities!"
