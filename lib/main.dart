@@ -7,6 +7,7 @@ import 'core/constants/app_constants.dart';
 import 'core/theme/app_theme.dart';
 import 'data/services/notification_service.dart';
 import 'data/services/background_service.dart';
+import 'data/services/widget_service.dart';
 import 'providers/app_providers.dart';
 import 'presentation/screens/auth/splash_screen.dart';
 import 'presentation/screens/auth/onboarding_screen.dart';
@@ -42,12 +43,30 @@ Future<void> main() async {
   try { await BackgroundService.initialize(); } catch (_) {}
   try { await NotificationService().initialize(); } catch (_) {}
   try { await NotificationService().scheduleHydrationReminders(); } catch (_) {}
+  try { await WidgetService.initialize(); } catch (_) {}
   try { await _processPendingNotificationAction(_container); } catch (_) {}
+  try { await _processPendingWidgetAction(_container); } catch (_) {}
 
   runApp(UncontrolledProviderScope(
     container: _container,
     child: const HydroIQApp(),
   ));
+}
+
+Future<void> _processPendingWidgetAction(ProviderContainer container) async {
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    final pendingMl = prefs.getInt('pending_widget_added_ml') ?? 0;
+    if (pendingMl > 0) {
+      await prefs.setInt('pending_widget_added_ml', 0);
+      Future.delayed(const Duration(seconds: 2), () {
+        try {
+          container.read(todayLogsProvider.notifier).addLog(pendingMl,
+              note: 'Quick-add via Home Screen Widget');
+        } catch (_) {}
+      });
+    }
+  } catch (_) {}
 }
 
 Future<void> _processPendingNotificationAction(ProviderContainer container) async {

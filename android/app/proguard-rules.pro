@@ -74,3 +74,8 @@
 # General plugins
 -dontwarn dev.fluttercommunity.plus.**
 -dontwarn crazecoder.openfile.**
+
+# Home Widget
+-dontwarn es.antonborri.home_widget.**
+-keep class es.antonborri.home_widget.** { *; }
+-keep class com.hydroiq.app.widget.** { *; }

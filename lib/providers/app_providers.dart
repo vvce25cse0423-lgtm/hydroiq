@@ -7,6 +7,7 @@ import '../data/services/weather_service.dart';
 import '../data/services/ai_service.dart';
 import '../core/constants/app_constants.dart';
 import '../data/services/notification_service.dart';
+import '../data/services/widget_service.dart';
 
 // ─── CORE SERVICES ────────────────────────────────────────────────────────────
 
@@ -198,6 +199,15 @@ class HydrationNotifier
       final logs =
           await _service.getHydrationLogsForDate(user.id, DateTime.now());
       state = AsyncValue.data(logs);
+
+      // Sync home screen widget & notifications on load
+      final total = logs.fold<int>(0, (sum, l) => sum + l.amountMl);
+      final prefs2 = await SharedPreferences.getInstance();
+      final storedWeight = prefs2.getDouble(AppConstants.keyWeightKg) ?? 0.0;
+      final goalMl = storedWeight > 0
+          ? (storedWeight * 35).round().clamp(1500, 6000)
+          : (prefs2.getInt(AppConstants.keyDailyGoalMl) ?? AppConstants.defaultDailyGoalMl);
+      WidgetService.updateWidget(currentMl: total, goalMl: goalMl);
     } catch (e, s) {
       state = AsyncValue.error(e, s);
     }
@@ -229,6 +239,7 @@ class HydrationNotifier
         : (prefs2.getInt(AppConstants.keyDailyGoalMl) ?? AppConstants.defaultDailyGoalMl);
     NotificationService().updateProgress(currentMl: total, goalMl: goalMl);
     // Update home screen widget
+    WidgetService.updateWidget(currentMl: total, goalMl: goalMl);
   }
 
   Future<void> deleteLog(String logId) async {
