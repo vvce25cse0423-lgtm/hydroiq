@@ -115,6 +115,7 @@ class WidgetService {
       await HomeWidget.updateWidget(
         name: appWidgetProvider,
         androidName: appWidgetProvider,
+        qualifiedAndroidName: 'com.hydroiq.app.widget.HydroIQWidgetProvider',
       );
     } catch (e) {
       debugPrint('WidgetService.updateWidget error: $e');

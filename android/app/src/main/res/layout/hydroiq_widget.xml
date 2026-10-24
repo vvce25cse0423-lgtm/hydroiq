@@ -9,6 +9,7 @@
 
     <!-- Header Row: App Icon + App Name + Percentage Badge -->
     <LinearLayout
+        android:id="@+id/widget_header_area"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center_vertical"
@@ -114,6 +115,8 @@
             android:layout_height="36dp"
             android:layout_weight="1"
             android:background="@drawable/widget_btn_250"
+            android:clickable="true"
+            android:focusable="true"
             android:gravity="center"
             android:text="+250 ml"
             android:textColor="#00E5FF"
@@ -127,6 +130,8 @@
             android:layout_marginStart="8dp"
             android:layout_weight="1"
             android:background="@drawable/widget_btn_500"
+            android:clickable="true"
+            android:focusable="true"
             android:gravity="center"
             android:text="+500 ml"
             android:textColor="#40C4FF"
@@ -139,6 +144,8 @@
             android:layout_height="36dp"
             android:layout_marginStart="8dp"
             android:background="@drawable/widget_btn_open"
+            android:clickable="true"
+            android:focusable="true"
             android:gravity="center"
             android:paddingStart="12dp"
             android:paddingEnd="12dp"

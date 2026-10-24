@@ -9,9 +9,8 @@ if (-not (Test-Path $rawSource)) {
 $src = [System.Drawing.Bitmap]::FromFile($rawSource)
 
 # -------------------------------------------------------------
-# Part 1: Generate App Icons
+# Part 1: Crop and Enhance Icon with Thickened Circuit Traces (15-20%)
 # -------------------------------------------------------------
-# Crop 520x520 square around center of icon (512, 284)
 $cropSize = 520
 $cropX = [int](512 - ($cropSize / 2)) # 252
 $cropY = [int](284 - ($cropSize / 2)) # 24
@@ -23,6 +22,64 @@ $gCrop.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::HighQuality
 $cropRect = New-Object System.Drawing.Rectangle($cropX, $cropY, $cropSize, $cropSize)
 $gCrop.DrawImage($src, 0, 0, $cropRect, [System.Drawing.GraphicsUnit]::Pixel)
 $gCrop.Dispose()
+
+# Enhance golden circuit lines by 15-20% to prevent blur at micro-resolutions (40-48px)
+$rect = New-Object System.Drawing.Rectangle(0, 0, $cropSize, $cropSize)
+$data = $cropped.LockBits($rect, [System.Drawing.Imaging.ImageLockMode]::ReadWrite, [System.Drawing.Imaging.PixelFormat]::Format32bppArgb)
+$stride = $data.Stride
+$ptr = $data.Scan0
+$bytes = [byte[]]::new($stride * $cropSize)
+[System.Runtime.InteropServices.Marshal]::Copy($ptr, $bytes, 0, $bytes.Length)
+
+$origBytes = [byte[]]::new($bytes.Length)
+[Array]::Copy($bytes, $origBytes, $bytes.Length)
+
+# Circuit region in lower half of drop
+for ($y = 230; $y -lt 430; $y++) {
+    for ($x = 140; $x -lt 380; $x++) {
+        $idx = ($y * $stride) + ($x * 4)
+        $b = $origBytes[$idx]
+        $g = $origBytes[$idx + 1]
+        $r = $origBytes[$idx + 2]
+
+        # Is this a gold circuit / synaptic node pixel?
+        $isGold = ($r -gt 150 -and $g -gt 100 -and ($r - $b) -gt 35)
+
+        if ($isGold) {
+            # Brighten core and boost saturation
+            $newR = [Math]::Min(255, [int]($r * 1.18))
+            $newG = [Math]::Min(255, [int]($g * 1.15))
+            $newB = [Math]::Max(0, [int]($b * 0.88))
+
+            $bytes[$idx] = [byte]$newB
+            $bytes[$idx + 1] = [byte]$newG
+            $bytes[$idx + 2] = [byte]$newR
+
+            # Expand line width by 15-20% into adjacent background pixels
+            $dx = @(1, -1, 0, 0)
+            $dy = @(0, 0, 1, -1)
+            for ($k = 0; $k -lt 4; $k++) {
+                $nx = $x + $dx[$k]
+                $ny = $y + $dy[$k]
+                if ($nx -ge 140 -and $nx -lt 380 -and $ny -ge 230 -and $ny -lt 430) {
+                    $nidx = ($ny * $stride) + ($nx * 4)
+                    $nb = $origBytes[$nidx]
+                    $ng = $origBytes[$nidx + 1]
+                    $nr = $origBytes[$nidx + 2]
+                    $nIsGold = ($nr -gt 150 -and $ng -gt 100 -and ($nr - $nb) -gt 35)
+                    if (-not $nIsGold) {
+                        $bytes[$nidx + 2] = [byte][Math]::Min(255, [int]($nr * 0.75 + $newR * 0.25))
+                        $bytes[$nidx + 1] = [byte][Math]::Min(255, [int]($ng * 0.75 + $newG * 0.25))
+                        $bytes[$nidx] = [byte][Math]::Min(255, [int]($nb * 0.85 + $newB * 0.15))
+                    }
+                }
+            }
+        }
+    }
+}
+
+[System.Runtime.InteropServices.Marshal]::Copy($bytes, 0, $ptr, $bytes.Length)
+$cropped.UnlockBits($data)
 
 # Create 1024x1024 full-bleed background
 $bg1024 = New-Object System.Drawing.Bitmap(1024, 1024, [System.Drawing.Imaging.PixelFormat]::Format32bppArgb)
@@ -110,7 +167,7 @@ foreach ($d in $densities) {
 $bg1024.Dispose()
 $fg1024.Dispose()
 $composite1024.Dispose()
-Write-Output "App icons successfully generated for all Android densities!"
+Write-Output "App icons with enhanced micro-details generated for all densities!"
 
 # -------------------------------------------------------------
 # Part 2: Generate Splash Screen Image (1080 x 2340 Portrait)
@@ -122,12 +179,10 @@ $gSplash = [System.Drawing.Graphics]::FromImage($splash)
 $gSplash.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
 $gSplash.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::HighQuality
 
-# Background base #020718
 $bgBrush = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb(255, 2, 7, 24))
 $gSplash.FillRectangle($bgBrush, 0, 0, $splashW, $splashH)
 $bgBrush.Dispose()
 
-# Ambient glow behind center
 $glowPath = New-Object System.Drawing.Drawing2D.GraphicsPath
 $glowRect = New-Object System.Drawing.Rectangle(0, [int]($splashH * 0.25), $splashW, [int]($splashH * 0.45))
 $glowPath.AddEllipse($glowRect)
@@ -139,13 +194,11 @@ $gSplash.FillRectangle($pbrGlow, $glowRect)
 $pbrGlow.Dispose()
 $glowPath.Dispose()
 
-# Draw the 1024x572 landscape image centered vertically
-$targetSrcH = [int]($splashW * (572.0 / 1024.0)) # 603 px
-$targetSrcY = [int](($splashH - $targetSrcH) * 0.42) # ~729 px
+$targetSrcH = [int]($splashW * (572.0 / 1024.0))
+$targetSrcY = [int](($splashH - $targetSrcH) * 0.42)
 
 $gSplash.DrawImage($src, 0, $targetSrcY, $splashW, $targetSrcH)
 
-# Blend watermark sparkle
 $sparkleX = [int](910 * ($splashW / 1024.0))
 $sparkleY = [int]($targetSrcY + (460 * ($targetSrcH / 572.0)))
 $sparkleW = [int](60 * ($splashW / 1024.0))
@@ -161,5 +214,4 @@ $splash.Save($splashOut, [System.Drawing.Imaging.ImageFormat]::Jpeg)
 $splash.Dispose()
 $src.Dispose()
 
-$splashSize = (Get-Item $splashOut).Length
-Write-Output "Splash screen successfully generated ($([math]::Round($splashSize / 1KB, 1)) KB)!"
+Write-Output "Icons and splash regenerated successfully!"
