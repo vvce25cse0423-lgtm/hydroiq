@@ -52,3 +52,25 @@
 # OkHttp (used by Ktor)
 -dontwarn okhttp3.**
 -dontwarn okio.**
+
+# Audioplayers
+-dontwarn xyz.luan.audioplayers.**
+-keep class xyz.luan.audioplayers.** { *; }
+
+# Printing / PDF
+-dontwarn net.nfet.flutter.printing.**
+-keep class net.nfet.flutter.printing.** { *; }
+
+# Permissions / Location
+-dontwarn com.baseflow.permissionhandler.**
+-keep class com.baseflow.permissionhandler.** { *; }
+-dontwarn com.baseflow.geolocator.**
+-keep class com.baseflow.geolocator.** { *; }
+
+# Speech to text
+-dontwarn com.csdcorp.speech_to_text.**
+-keep class com.csdcorp.speech_to_text.** { *; }
+
+# General plugins
+-dontwarn dev.fluttercommunity.plus.**
+-dontwarn crazecoder.openfile.**
