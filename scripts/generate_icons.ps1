@@ -1,73 +1,30 @@
 Add-Type -AssemblyName System.Drawing
 
-$sourcePath = 'scripts\raw_assets\app_icon_raw.png'
-if (-not (Test-Path $sourcePath)) {
-    Write-Error "Source image $sourcePath not found!"
+$rawSource = 'scripts\raw_assets\new_app_icon_raw.png'
+if (-not (Test-Path $rawSource)) {
+    Write-Error "Source image $rawSource not found!"
     exit 1
 }
 
-$src = [System.Drawing.Bitmap]::FromFile($sourcePath)
-$w = $src.Width
-$h = $src.Height
+$src = [System.Drawing.Bitmap]::FromFile($rawSource)
 
-# Step 1: Extract button with transparent outer white border
-$btnTarget = New-Object System.Drawing.Bitmap($w, $h, [System.Drawing.Imaging.PixelFormat]::Format32bppArgb)
-$g = [System.Drawing.Graphics]::FromImage($btnTarget)
-$g.DrawImage($src, 0, 0, $w, $h)
-$g.Dispose()
-$src.Dispose()
+# -------------------------------------------------------------
+# Part 1: Generate App Icons
+# -------------------------------------------------------------
+# Crop 520x520 square around center of icon (512, 284)
+$cropSize = 520
+$cropX = [int](512 - ($cropSize / 2)) # 252
+$cropY = [int](284 - ($cropSize / 2)) # 24
 
-$rect = [System.Drawing.Rectangle]::new(0, 0, $w, $h)
-$data = $btnTarget.LockBits($rect, [System.Drawing.Imaging.ImageLockMode]::ReadWrite, [System.Drawing.Imaging.PixelFormat]::Format32bppArgb)
-$stride = $data.Stride
-$ptr = $data.Scan0
-$bytes = [byte[]]::new($stride * $h)
-[System.Runtime.InteropServices.Marshal]::Copy($ptr, $bytes, 0, $bytes.Length)
+$cropped = New-Object System.Drawing.Bitmap($cropSize, $cropSize, [System.Drawing.Imaging.PixelFormat]::Format32bppArgb)
+$gCrop = [System.Drawing.Graphics]::FromImage($cropped)
+$gCrop.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
+$gCrop.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::HighQuality
+$cropRect = New-Object System.Drawing.Rectangle($cropX, $cropY, $cropSize, $cropSize)
+$gCrop.DrawImage($src, 0, 0, $cropRect, [System.Drawing.GraphicsUnit]::Pixel)
+$gCrop.Dispose()
 
-$visited = New-Object "bool[,]" $w, $h
-$queue = New-Object System.Collections.Generic.Queue[System.Drawing.Point]
-
-$seeds = @(
-    [System.Drawing.Point]::new(0, 0),
-    [System.Drawing.Point]::new($w - 1, 0),
-    [System.Drawing.Point]::new(0, $h - 1),
-    [System.Drawing.Point]::new($w - 1, $h - 1)
-)
-foreach ($s in $seeds) {
-    $queue.Enqueue($s)
-    $visited[$s.X, $s.Y] = $true
-}
-
-$dx = @(1, -1, 0, 0)
-$dy = @(0, 0, 1, -1)
-
-while ($queue.Count -gt 0) {
-    $pt = $queue.Dequeue()
-    $idx = ($pt.Y * $stride) + ($pt.X * 4)
-    $b = $bytes[$idx]
-    $gVal = $bytes[$idx + 1]
-    $r = $bytes[$idx + 2]
-
-    if ($r -gt 230 -and $gVal -gt 230 -and $b -gt 230) {
-        $bytes[$idx + 3] = 0 # Transparent
-        for ($i = 0; $i -lt 4; $i++) {
-            $nx = $pt.X + $dx[$i]
-            $ny = $pt.Y + $dy[$i]
-            if ($nx -ge 0 -and $nx -lt $w -and $ny -ge 0 -and $ny -lt $h) {
-                if (-not $visited[$nx, $ny]) {
-                    $visited[$nx, $ny] = $true
-                    $queue.Enqueue([System.Drawing.Point]::new($nx, $ny))
-                }
-            }
-        }
-    }
-}
-
-[System.Runtime.InteropServices.Marshal]::Copy($bytes, 0, $ptr, $bytes.Length)
-$btnTarget.UnlockBits($data)
-
-# Step 2: Create full-bleed gradient background matching the HydroIQ theme
-# Radial gradient from bright blue center (#2079BB) to deep navy corners (#0A1E3E)
+# Create 1024x1024 full-bleed background
 $bg1024 = New-Object System.Drawing.Bitmap(1024, 1024, [System.Drawing.Imaging.PixelFormat]::Format32bppArgb)
 $gBg = [System.Drawing.Graphics]::FromImage($bg1024)
 $bgRect = New-Object System.Drawing.Rectangle(0, 0, 1024, 1024)
@@ -75,46 +32,44 @@ $bgPath = New-Object System.Drawing.Drawing2D.GraphicsPath
 $bgPath.AddRectangle($bgRect)
 
 $pbr = New-Object System.Drawing.Drawing2D.PathGradientBrush($bgPath)
-$pbr.CenterPoint = [System.Drawing.PointF]::new(512, 470)
-$pbr.CenterColor = [System.Drawing.Color]::FromArgb(255, 32, 121, 187) # #2079BB
+$pbr.CenterPoint = [System.Drawing.PointF]::new(512, 512)
+$pbr.CenterColor = [System.Drawing.Color]::FromArgb(255, 6, 21, 46)
 $pbr.SurroundColors = @(
-    [System.Drawing.Color]::FromArgb(255, 12, 38, 74),  # Top-Left
-    [System.Drawing.Color]::FromArgb(255, 20, 80, 130), # Top-Right
-    [System.Drawing.Color]::FromArgb(255, 10, 30, 62),  # Bottom-Right
-    [System.Drawing.Color]::FromArgb(255, 10, 30, 62)   # Bottom-Left
+    [System.Drawing.Color]::FromArgb(255, 2, 6, 20),
+    [System.Drawing.Color]::FromArgb(255, 2, 6, 20),
+    [System.Drawing.Color]::FromArgb(255, 1, 4, 18),
+    [System.Drawing.Color]::FromArgb(255, 1, 4, 18)
 )
 $gBg.FillRectangle($pbr, $bgRect)
 $pbr.Dispose()
 $bgPath.Dispose()
 $gBg.Dispose()
 
-# Step 3: Scale button to fit safely inside the Android Adaptive Icon safe zone (~65% scale)
-$scale = 0.65
-$targetW = [int](1024 * $scale)
-$targetH = [int](1024 * $scale)
-$offsetX = [int]((1024 - $targetW) / 2)
-$offsetY = [int]((1024 - $targetH) / 2)
+# Safe-zone scaled dimensions (68% scale = 696x696, 164px padding)
+$scale = 0.68
+$targetSize = [int](1024 * $scale)
+$offset = [int]((1024 - $targetSize) / 2)
 
-# 3A: Foreground (scaled button on transparent canvas for adaptive icons)
+# Pre-composited full icon
+$composite1024 = New-Object System.Drawing.Bitmap($bg1024)
+$gComp = [System.Drawing.Graphics]::FromImage($composite1024)
+$gComp.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
+$gComp.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::HighQuality
+$gComp.PixelOffsetMode = [System.Drawing.Drawing2D.PixelOffsetMode]::HighQuality
+$gComp.DrawImage($cropped, $offset, $offset, $targetSize, $targetSize)
+$gComp.Dispose()
+
+# Foreground on transparent canvas (for adaptive icons)
 $fg1024 = New-Object System.Drawing.Bitmap(1024, 1024, [System.Drawing.Imaging.PixelFormat]::Format32bppArgb)
 $gFg = [System.Drawing.Graphics]::FromImage($fg1024)
 $gFg.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
 $gFg.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::HighQuality
 $gFg.Clear([System.Drawing.Color]::Transparent)
-$gFg.DrawImage($btnTarget, $offsetX, $offsetY, $targetW, $targetH)
+$gFg.DrawImage($cropped, $offset, $offset, $targetSize, $targetSize)
 $gFg.Dispose()
+$cropped.Dispose()
 
-# 3B: Pre-composited full icon (background + scaled foreground)
-$composite1024 = New-Object System.Drawing.Bitmap($bg1024)
-$gComp = [System.Drawing.Graphics]::FromImage($composite1024)
-$gComp.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
-$gComp.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::HighQuality
-$gComp.DrawImage($btnTarget, $offsetX, $offsetY, $targetW, $targetH)
-$gComp.Dispose()
-
-$btnTarget.Dispose()
-
-# Helper function to resize with high-quality bicubic interpolation
+# Helper function to resize with high quality bicubic interpolation
 function Resize-Image($img, $width, $height, $outPath) {
     $newBmp = New-Object System.Drawing.Bitmap($width, $height, [System.Drawing.Imaging.PixelFormat]::Format32bppArgb)
     $gResize = [System.Drawing.Graphics]::FromImage($newBmp)
@@ -155,5 +110,56 @@ foreach ($d in $densities) {
 $bg1024.Dispose()
 $fg1024.Dispose()
 $composite1024.Dispose()
+Write-Output "App icons successfully generated for all Android densities!"
 
-Write-Output "Successfully generated safe-zone scaled icons for all Android densities!"
+# -------------------------------------------------------------
+# Part 2: Generate Splash Screen Image (1080 x 2340 Portrait)
+# -------------------------------------------------------------
+$splashW = 1080
+$splashH = 2340
+$splash = New-Object System.Drawing.Bitmap($splashW, $splashH, [System.Drawing.Imaging.PixelFormat]::Format24bppRgb)
+$gSplash = [System.Drawing.Graphics]::FromImage($splash)
+$gSplash.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
+$gSplash.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::HighQuality
+
+# Background base #020718
+$bgBrush = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb(255, 2, 7, 24))
+$gSplash.FillRectangle($bgBrush, 0, 0, $splashW, $splashH)
+$bgBrush.Dispose()
+
+# Ambient glow behind center
+$glowPath = New-Object System.Drawing.Drawing2D.GraphicsPath
+$glowRect = New-Object System.Drawing.Rectangle(0, [int]($splashH * 0.25), $splashW, [int]($splashH * 0.45))
+$glowPath.AddEllipse($glowRect)
+$pbrGlow = New-Object System.Drawing.Drawing2D.PathGradientBrush($glowPath)
+$pbrGlow.CenterPoint = [System.Drawing.PointF]::new($splashW / 2, [float]($splashH * 0.42))
+$pbrGlow.CenterColor = [System.Drawing.Color]::FromArgb(255, 6, 26, 54)
+$pbrGlow.SurroundColors = @([System.Drawing.Color]::FromArgb(255, 2, 7, 24))
+$gSplash.FillRectangle($pbrGlow, $glowRect)
+$pbrGlow.Dispose()
+$glowPath.Dispose()
+
+# Draw the 1024x572 landscape image centered vertically
+$targetSrcH = [int]($splashW * (572.0 / 1024.0)) # 603 px
+$targetSrcY = [int](($splashH - $targetSrcH) * 0.42) # ~729 px
+
+$gSplash.DrawImage($src, 0, $targetSrcY, $splashW, $targetSrcH)
+
+# Blend watermark sparkle
+$sparkleX = [int](910 * ($splashW / 1024.0))
+$sparkleY = [int]($targetSrcY + (460 * ($targetSrcH / 572.0)))
+$sparkleW = [int](60 * ($splashW / 1024.0))
+$sparkleH = [int](60 * ($targetSrcH / 572.0))
+$sparkleBrush = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb(255, 1, 4, 21))
+$gSplash.FillEllipse($sparkleBrush, $sparkleX, $sparkleY, $sparkleW, $sparkleH)
+$sparkleBrush.Dispose()
+
+$gSplash.Dispose()
+
+$splashOut = "assets\images\splash_background.jpg"
+$splash.Save($splashOut, [System.Drawing.Imaging.ImageFormat]::Jpeg)
+$splash.Dispose()
+$src.Dispose()
+
+$splashSize = (Get-Item $splashOut).Length
+Write-Output "Splash screen successfully generated ($([math]::Round($splashSize / 1KB, 1)) KB)!"
