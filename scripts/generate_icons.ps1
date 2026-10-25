@@ -7,71 +7,61 @@ if (-not (Test-Path $rawSource)) {
 }
 
 $src = [System.Drawing.Bitmap]::FromFile($rawSource)
+$w = $src.Width
+$h = $src.Height
+
+Write-Output "Processing source icon ($w x $h)..."
 
 # -------------------------------------------------------------
-# Part 1: Crop and Enhance Icon with Thickened Circuit Traces (15-20%)
+# Step 1: Clean White Corners from the Icon
 # -------------------------------------------------------------
-$cropSize = 520
-$cropX = [int](512 - ($cropSize / 2)) # 252
-$cropY = [int](284 - ($cropSize / 2)) # 24
+$cleanBtn = New-Object System.Drawing.Bitmap($w, $h, [System.Drawing.Imaging.PixelFormat]::Format32bppArgb)
+$gClean = [System.Drawing.Graphics]::FromImage($cleanBtn)
+$gClean.DrawImage($src, 0, 0, $w, $h)
+$gClean.Dispose()
 
-$cropped = New-Object System.Drawing.Bitmap($cropSize, $cropSize, [System.Drawing.Imaging.PixelFormat]::Format32bppArgb)
-$gCrop = [System.Drawing.Graphics]::FromImage($cropped)
-$gCrop.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
-$gCrop.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::HighQuality
-$cropRect = New-Object System.Drawing.Rectangle($cropX, $cropY, $cropSize, $cropSize)
-$gCrop.DrawImage($src, 0, 0, $cropRect, [System.Drawing.GraphicsUnit]::Pixel)
-$gCrop.Dispose()
-
-# Enhance golden circuit lines by 15-20% to prevent blur at micro-resolutions (40-48px)
-$rect = New-Object System.Drawing.Rectangle(0, 0, $cropSize, $cropSize)
-$data = $cropped.LockBits($rect, [System.Drawing.Imaging.ImageLockMode]::ReadWrite, [System.Drawing.Imaging.PixelFormat]::Format32bppArgb)
+$rect = New-Object System.Drawing.Rectangle(0, 0, $w, $h)
+$data = $cleanBtn.LockBits($rect, [System.Drawing.Imaging.ImageLockMode]::ReadWrite, [System.Drawing.Imaging.PixelFormat]::Format32bppArgb)
 $stride = $data.Stride
 $ptr = $data.Scan0
-$bytes = [byte[]]::new($stride * $cropSize)
+$bytes = [byte[]]::new($stride * $h)
 [System.Runtime.InteropServices.Marshal]::Copy($ptr, $bytes, 0, $bytes.Length)
 
-$origBytes = [byte[]]::new($bytes.Length)
-[Array]::Copy($bytes, $origBytes, $bytes.Length)
+# Flood fill from 4 corners for outer white pixels
+$visited = New-Object "bool[,]" $w, $h
+$queue = New-Object System.Collections.Generic.Queue[System.Drawing.Point]
 
-# Circuit region in lower half of drop
-for ($y = 230; $y -lt 430; $y++) {
-    for ($x = 140; $x -lt 380; $x++) {
-        $idx = ($y * $stride) + ($x * 4)
-        $b = $origBytes[$idx]
-        $g = $origBytes[$idx + 1]
-        $r = $origBytes[$idx + 2]
+$seeds = @(
+    [System.Drawing.Point]::new(0, 0),
+    [System.Drawing.Point]::new($w - 1, 0),
+    [System.Drawing.Point]::new(0, $h - 1),
+    [System.Drawing.Point]::new($w - 1, $h - 1)
+)
+foreach ($s in $seeds) {
+    $queue.Enqueue($s)
+    $visited[$s.X, $s.Y] = $true
+}
 
-        # Is this a gold circuit / synaptic node pixel?
-        $isGold = ($r -gt 150 -and $g -gt 100 -and ($r - $b) -gt 35)
+$dx = @(1, -1, 0, 0)
+$dy = @(0, 0, 1, -1)
 
-        if ($isGold) {
-            # Brighten core and boost saturation
-            $newR = [Math]::Min(255, [int]($r * 1.18))
-            $newG = [Math]::Min(255, [int]($g * 1.15))
-            $newB = [Math]::Max(0, [int]($b * 0.88))
+while ($queue.Count -gt 0) {
+    $pt = $queue.Dequeue()
+    $idx = ($pt.Y * $stride) + ($pt.X * 4)
+    $b = $bytes[$idx]
+    $gVal = $bytes[$idx + 1]
+    $r = $bytes[$idx + 2]
 
-            $bytes[$idx] = [byte]$newB
-            $bytes[$idx + 1] = [byte]$newG
-            $bytes[$idx + 2] = [byte]$newR
-
-            # Expand line width by 15-20% into adjacent background pixels
-            $dx = @(1, -1, 0, 0)
-            $dy = @(0, 0, 1, -1)
-            for ($k = 0; $k -lt 4; $k++) {
-                $nx = $x + $dx[$k]
-                $ny = $y + $dy[$k]
-                if ($nx -ge 140 -and $nx -lt 380 -and $ny -ge 230 -and $ny -lt 430) {
-                    $nidx = ($ny * $stride) + ($nx * 4)
-                    $nb = $origBytes[$nidx]
-                    $ng = $origBytes[$nidx + 1]
-                    $nr = $origBytes[$nidx + 2]
-                    $nIsGold = ($nr -gt 150 -and $ng -gt 100 -and ($nr - $nb) -gt 35)
-                    if (-not $nIsGold) {
-                        $bytes[$nidx + 2] = [byte][Math]::Min(255, [int]($nr * 0.75 + $newR * 0.25))
-                        $bytes[$nidx + 1] = [byte][Math]::Min(255, [int]($ng * 0.75 + $newG * 0.25))
-                        $bytes[$nidx] = [byte][Math]::Min(255, [int]($nb * 0.85 + $newB * 0.15))
-                    }
+    # White corner threshold
+    if ($r -gt 225 -and $gVal -gt 225 -and $b -gt 225) {
+        $bytes[$idx + 3] = 0 # Transparent
+        for ($i = 0; $i -lt 4; $i++) {
+            $nx = $pt.X + $dx[$i]
+            $ny = $pt.Y + $dy[$i]
+            if ($nx -ge 0 -and $nx -lt $w -and $ny -ge 0 -and $ny -lt $h) {
+                if (-not $visited[$nx, $ny]) {
+                    $visited[$nx, $ny] = $true
+                    $queue.Enqueue([System.Drawing.Point]::new($nx, $ny))
                 }
             }
         }
@@ -79,9 +69,11 @@ for ($y = 230; $y -lt 430; $y++) {
 }
 
 [System.Runtime.InteropServices.Marshal]::Copy($bytes, 0, $ptr, $bytes.Length)
-$cropped.UnlockBits($data)
+$cleanBtn.UnlockBits($data)
 
-# Create 1024x1024 full-bleed background
+# -------------------------------------------------------------
+# Step 2: Full-Bleed Royal Blue Background (1024x1024)
+# -------------------------------------------------------------
 $bg1024 = New-Object System.Drawing.Bitmap(1024, 1024, [System.Drawing.Imaging.PixelFormat]::Format32bppArgb)
 $gBg = [System.Drawing.Graphics]::FromImage($bg1024)
 $bgRect = New-Object System.Drawing.Rectangle(0, 0, 1024, 1024)
@@ -89,44 +81,45 @@ $bgPath = New-Object System.Drawing.Drawing2D.GraphicsPath
 $bgPath.AddRectangle($bgRect)
 
 $pbr = New-Object System.Drawing.Drawing2D.PathGradientBrush($bgPath)
-$pbr.CenterPoint = [System.Drawing.PointF]::new(512, 512)
-$pbr.CenterColor = [System.Drawing.Color]::FromArgb(255, 6, 21, 46)
+$pbr.CenterPoint = [System.Drawing.PointF]::new(512, 490)
+$pbr.CenterColor = [System.Drawing.Color]::FromArgb(255, 8, 103, 234) # Vibrant royal blue
 $pbr.SurroundColors = @(
-    [System.Drawing.Color]::FromArgb(255, 2, 6, 20),
-    [System.Drawing.Color]::FromArgb(255, 2, 6, 20),
-    [System.Drawing.Color]::FromArgb(255, 1, 4, 18),
-    [System.Drawing.Color]::FromArgb(255, 1, 4, 18)
+    [System.Drawing.Color]::FromArgb(255, 6, 75, 190),  # Top-Left
+    [System.Drawing.Color]::FromArgb(255, 12, 110, 245), # Top-Right
+    [System.Drawing.Color]::FromArgb(255, 2, 40, 130),  # Bottom-Right
+    [System.Drawing.Color]::FromArgb(255, 2, 40, 130)   # Bottom-Left
 )
 $gBg.FillRectangle($pbr, $bgRect)
 $pbr.Dispose()
 $bgPath.Dispose()
 $gBg.Dispose()
 
-# Safe-zone scaled dimensions (68% scale = 696x696, 164px padding)
+# -------------------------------------------------------------
+# Step 3: Scaled Composite & Adaptive Foreground (68% Safe Zone)
+# -------------------------------------------------------------
 $scale = 0.68
-$targetSize = [int](1024 * $scale)
-$offset = [int]((1024 - $targetSize) / 2)
+$targetSize = [int](1024 * $scale) # 696
+$offset = [int]((1024 - $targetSize) / 2) # 164
 
-# Pre-composited full icon
+# 3A: Pre-composited full icon
 $composite1024 = New-Object System.Drawing.Bitmap($bg1024)
 $gComp = [System.Drawing.Graphics]::FromImage($composite1024)
 $gComp.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
 $gComp.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::HighQuality
 $gComp.PixelOffsetMode = [System.Drawing.Drawing2D.PixelOffsetMode]::HighQuality
-$gComp.DrawImage($cropped, $offset, $offset, $targetSize, $targetSize)
+$gComp.DrawImage($cleanBtn, $offset, $offset, $targetSize, $targetSize)
 $gComp.Dispose()
 
-# Foreground on transparent canvas (for adaptive icons)
+# 3B: Adaptive foreground (transparent canvas)
 $fg1024 = New-Object System.Drawing.Bitmap(1024, 1024, [System.Drawing.Imaging.PixelFormat]::Format32bppArgb)
 $gFg = [System.Drawing.Graphics]::FromImage($fg1024)
 $gFg.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
 $gFg.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::HighQuality
 $gFg.Clear([System.Drawing.Color]::Transparent)
-$gFg.DrawImage($cropped, $offset, $offset, $targetSize, $targetSize)
+$gFg.DrawImage($cleanBtn, $offset, $offset, $targetSize, $targetSize)
 $gFg.Dispose()
-$cropped.Dispose()
 
-# Helper function to resize with high quality bicubic interpolation
+# Helper for resizing with high quality bicubic interpolation
 function Resize-Image($img, $width, $height, $outPath) {
     $newBmp = New-Object System.Drawing.Bitmap($width, $height, [System.Drawing.Imaging.PixelFormat]::Format32bppArgb)
     $gResize = [System.Drawing.Graphics]::FromImage($newBmp)
@@ -141,12 +134,17 @@ function Resize-Image($img, $width, $height, $outPath) {
     $newBmp.Dispose()
 }
 
-# Save main Flutter assets
+# -------------------------------------------------------------
+# Step 4: Export Main Flutter Assets
+# -------------------------------------------------------------
 $composite1024.Save('assets\icons\app_icon.png', [System.Drawing.Imaging.ImageFormat]::Png)
 $composite1024.Save('assets\images\app_icon.png', [System.Drawing.Imaging.ImageFormat]::Png)
 Resize-Image $composite1024 512 512 'assets\icons\app_icon_512.png'
+Write-Output "Flutter icon assets saved (1024x1024 and 512x512)."
 
-# Android mipmap densities and sizes
+# -------------------------------------------------------------
+# Step 5: Export Android Mipmap Densities
+# -------------------------------------------------------------
 $densities = @(
     @{ Name = 'mdpi'; Size = 48 },
     @{ Name = 'hdpi'; Size = 72 },
@@ -163,14 +161,10 @@ foreach ($d in $densities) {
     Resize-Image $fg1024 $size $size "$dir\ic_launcher_foreground.png"
     Resize-Image $bg1024 $size $size "$dir\ic_launcher_background.png"
 }
-
-$bg1024.Dispose()
-$fg1024.Dispose()
-$composite1024.Dispose()
-Write-Output "App icons with enhanced micro-details generated for all densities!"
+Write-Output "Android mipmaps generated for all densities."
 
 # -------------------------------------------------------------
-# Part 2: Generate Splash Screen Image (1080 x 2340 Portrait)
+# Step 6: Generate High-Resolution Splash Screen (1080 x 2340 Portrait)
 # -------------------------------------------------------------
 $splashW = 1080
 $splashH = 2340
@@ -178,40 +172,68 @@ $splash = New-Object System.Drawing.Bitmap($splashW, $splashH, [System.Drawing.I
 $gSplash = [System.Drawing.Graphics]::FromImage($splash)
 $gSplash.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
 $gSplash.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::HighQuality
+$gSplash.TextRenderingHint = [System.Drawing.Text.TextRenderingHint]::AntiAliasGridFit
 
-$bgBrush = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb(255, 2, 7, 24))
-$gSplash.FillRectangle($bgBrush, 0, 0, $splashW, $splashH)
-$bgBrush.Dispose()
+# Deep midnight blue canvas
+$bgSplashBrush = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb(255, 3, 10, 28))
+$gSplash.FillRectangle($bgSplashBrush, 0, 0, $splashW, $splashH)
+$bgSplashBrush.Dispose()
 
+# Soft vibrant royal blue ambient glow centered on the logo
 $glowPath = New-Object System.Drawing.Drawing2D.GraphicsPath
-$glowRect = New-Object System.Drawing.Rectangle(0, [int]($splashH * 0.25), $splashW, [int]($splashH * 0.45))
+$glowRect = New-Object System.Drawing.Rectangle(0, [int]($splashH * 0.22), $splashW, [int]($splashH * 0.40))
 $glowPath.AddEllipse($glowRect)
 $pbrGlow = New-Object System.Drawing.Drawing2D.PathGradientBrush($glowPath)
-$pbrGlow.CenterPoint = [System.Drawing.PointF]::new($splashW / 2, [float]($splashH * 0.42))
-$pbrGlow.CenterColor = [System.Drawing.Color]::FromArgb(255, 6, 26, 54)
-$pbrGlow.SurroundColors = @([System.Drawing.Color]::FromArgb(255, 2, 7, 24))
+$pbrGlow.CenterPoint = [System.Drawing.PointF]::new($splashW / 2, [float]($splashH * 0.40))
+$pbrGlow.CenterColor = [System.Drawing.Color]::FromArgb(255, 8, 48, 120)
+$pbrGlow.SurroundColors = @([System.Drawing.Color]::FromArgb(255, 3, 10, 28))
 $gSplash.FillRectangle($pbrGlow, $glowRect)
 $pbrGlow.Dispose()
 $glowPath.Dispose()
 
-$targetSrcH = [int]($splashW * (572.0 / 1024.0))
-$targetSrcY = [int](($splashH - $targetSrcH) * 0.42)
+# Draw clean Hydro H icon centered at Y ~ 38%
+$iconSplashSize = 460
+$iconSplashX = [int](($splashW - $iconSplashSize) / 2)
+$iconSplashY = [int]($splashH * 0.30)
+$gSplash.DrawImage($cleanBtn, $iconSplashX, $iconSplashY, $iconSplashSize, $iconSplashSize)
 
-$gSplash.DrawImage($src, 0, $targetSrcY, $splashW, $targetSrcH)
+# Branding Text: "HydroIQ"
+$fontFamily = New-Object System.Drawing.FontFamily("Segoe UI")
+$titleFont = New-Object System.Drawing.Font($fontFamily, 44, [System.Drawing.FontStyle]::Bold, [System.Drawing.GraphicsUnit]::Pixel)
+$titleBrush = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb(255, 255, 255, 255))
+$stringFormat = New-Object System.Drawing.StringFormat
+$stringFormat.Alignment = [System.Drawing.StringAlignment]::Center
+$stringFormat.LineAlignment = [System.Drawing.StringAlignment]::Center
 
-$sparkleX = [int](910 * ($splashW / 1024.0))
-$sparkleY = [int]($targetSrcY + (460 * ($targetSrcH / 572.0)))
-$sparkleW = [int](60 * ($splashW / 1024.0))
-$sparkleH = [int](60 * ($targetSrcH / 572.0))
-$sparkleBrush = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb(255, 1, 4, 21))
-$gSplash.FillEllipse($sparkleBrush, $sparkleX, $sparkleY, $sparkleW, $sparkleH)
-$sparkleBrush.Dispose()
+$titleY = [float]($iconSplashY + $iconSplashSize + 55)
+$titleRect = New-Object System.Drawing.RectangleF(0, $titleY, [float]$splashW, 60.0)
+$gSplash.DrawString("HydroIQ", $titleFont, $titleBrush, $titleRect, $stringFormat)
 
+# Subtitle: "Intelligent Hydration Tracking"
+$subFont = New-Object System.Drawing.Font($fontFamily, 18, [System.Drawing.FontStyle]::Regular, [System.Drawing.GraphicsUnit]::Pixel)
+$subBrush = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb(255, 120, 180, 245))
+$subY = [float]($titleY + 50)
+$subRect = New-Object System.Drawing.RectangleF(0, $subY, [float]$splashW, 40.0)
+$gSplash.DrawString("INTELLIGENT HYDRATION TRACKING", $subFont, $subBrush, $subRect, $stringFormat)
+
+$subBrush.Dispose()
+$subFont.Dispose()
+$titleBrush.Dispose()
+$titleFont.Dispose()
+$fontFamily.Dispose()
+$stringFormat.Dispose()
 $gSplash.Dispose()
 
 $splashOut = "assets\images\splash_background.jpg"
 $splash.Save($splashOut, [System.Drawing.Imaging.ImageFormat]::Jpeg)
 $splash.Dispose()
+Write-Output "Splash background updated at $splashOut."
+
+# Clean up resources
+$bg1024.Dispose()
+$fg1024.Dispose()
+$composite1024.Dispose()
+$cleanBtn.Dispose()
 $src.Dispose()
 
-Write-Output "Icons and splash regenerated successfully!"
+Write-Output "All icons and splash screen successfully updated!"
