@@ -204,9 +204,10 @@ class HydrationNotifier
       final total = logs.fold<int>(0, (sum, l) => sum + l.amountMl);
       final prefs2 = await SharedPreferences.getInstance();
       final storedWeight = prefs2.getDouble(AppConstants.keyWeightKg) ?? 0.0;
-      final goalMl = storedWeight > 0
-          ? (storedWeight * 35).round().clamp(1500, 6000)
-          : (prefs2.getInt(AppConstants.keyDailyGoalMl) ?? AppConstants.defaultDailyGoalMl);
+      final goalMl = prefs2.getInt('widget_goal_ml_int') ??
+          (storedWeight > 0
+              ? (storedWeight * 35).round().clamp(1500, 6000)
+              : (prefs2.getInt(AppConstants.keyDailyGoalMl) ?? AppConstants.defaultDailyGoalMl));
       WidgetService.updateWidget(currentMl: total, goalMl: goalMl);
     } catch (e, s) {
       state = AsyncValue.error(e, s);
@@ -234,9 +235,10 @@ class HydrationNotifier
     // Falls back to keyDailyGoalMl so old installs still work.
     final prefs2  = await SharedPreferences.getInstance();
     final storedWeight = prefs2.getDouble(AppConstants.keyWeightKg) ?? 0.0;
-    final goalMl  = storedWeight > 0
-        ? (storedWeight * 35).round().clamp(1500, 6000)
-        : (prefs2.getInt(AppConstants.keyDailyGoalMl) ?? AppConstants.defaultDailyGoalMl);
+    final goalMl  = prefs2.getInt('widget_goal_ml_int') ??
+        (storedWeight > 0
+            ? (storedWeight * 35).round().clamp(1500, 6000)
+            : (prefs2.getInt(AppConstants.keyDailyGoalMl) ?? AppConstants.defaultDailyGoalMl));
     NotificationService().updateProgress(currentMl: total, goalMl: goalMl);
     // Update home screen widget
     WidgetService.updateWidget(currentMl: total, goalMl: goalMl);
@@ -415,5 +417,13 @@ final smartGoalProvider = Provider<int>((ref) {
 
   // Add today's addons (weather + sleep + steps) — sync read from addon provider
   final addon = ref.watch(todayAddonProvider).valueOrNull ?? 0;
-  return (baseline + addon).clamp(1500, 9000);
+  final goal = (baseline + addon).clamp(1500, 9000);
+
+  // Synchronize dashboard goal with widget storage
+  SharedPreferences.getInstance().then((prefs) {
+    prefs.setInt('widget_goal_ml_int', goal);
+    prefs.setInt(AppConstants.keyDailyGoalMl, goal);
+  }).catchError((_) {});
+
+  return goal;
 });

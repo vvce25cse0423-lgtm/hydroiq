@@ -10,6 +10,7 @@ import 'package:speech_to_text/speech_to_text.dart' as stt;
 import '../../../core/theme/app_theme.dart';
 import '../../../data/models/app_models.dart';
 import '../../../data/services/background_service.dart';
+import '../../../data/services/widget_service.dart';
 import '../../../data/services/sleep_detection_engine.dart';
 import '../../../data/services/sleep_health_service.dart';
 import '../../../providers/app_providers.dart';
@@ -213,7 +214,12 @@ class _SleepScreenState extends ConsumerState<SleepScreen>
           quality:       quality,
         );
       }).toList();
-      if (mounted) setState(() => _manualSessions = restored);
+      if (mounted) {
+        setState(() => _manualSessions = restored);
+        if (restored.isNotEmpty) {
+          WidgetService.syncMetrics(sleepHours: restored.first.durationHours);
+        }
+      }
     } catch (_) {}
   }
 
@@ -476,6 +482,7 @@ class _SleepScreenState extends ConsumerState<SleepScreen>
 
     final svc = ref.read(_healthSvcProvider);
     _loadHCSessions(svc);
+    WidgetService.syncMetrics(sleepHours: session.durationHours);
 
     if (mounted) {
       await Future.delayed(200.ms);

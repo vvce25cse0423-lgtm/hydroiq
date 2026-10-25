@@ -91,12 +91,16 @@ class HydroIQWidgetProvider : HomeWidgetProvider() {
                 val progress = widgetData.getInt("progress", 0)
                 val percentage = widgetData.getString("percentage", "0%") ?: "0%"
                 val statusText = widgetData.getString("status_text", "Daily Hydration Goal") ?: "Daily Hydration Goal"
+                val stepsText = widgetData.getString("steps_text", "0 steps") ?: "0 steps"
+                val sleepText = widgetData.getString("sleep_text", "-- hrs") ?: "-- hrs"
 
                 setTextViewText(R.id.widget_current_ml, "$currentMl ml")
                 setTextViewText(R.id.widget_goal_ml, "/ $goalMl ml")
                 setTextViewText(R.id.widget_percentage, percentage)
                 setTextViewText(R.id.widget_status, statusText)
                 setProgressBar(R.id.widget_progress_bar, 100, progress, false)
+                setTextViewText(R.id.widget_steps_val, stepsText)
+                setTextViewText(R.id.widget_sleep_val, sleepText)
 
                 // Quick add +250ml explicit PendingIntent
                 val flags = if (Build.VERSION.SDK_INT >= 23) {

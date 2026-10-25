@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/constants/app_constants.dart';
@@ -23,8 +24,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
   late AnimationController _shimmerController;
   late Animation<double> _shimmerAnim;
-
-  late AnimationController _sparkleController;
 
   @override
   void initState() {
@@ -61,12 +60,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       curve: Curves.linear,
     );
 
-    // 4. Subtle ambient sparkle pulse
-    _sparkleController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1800),
-    )..repeat(reverse: true);
-
     _initializeApp();
   }
 
@@ -89,6 +82,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     ref.invalidate(todayLogsProvider);
 
     String targetRoute = '/dashboard';
+    dynamic fetchedProfile;
 
     if (!onboardingDone) {
       targetRoute = '/onboarding';
@@ -96,13 +90,13 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       targetRoute = '/login';
     } else {
       try {
-        final profile = await supabase
+        fetchedProfile = await supabase
             .from('users')
             .select()
             .eq('id', user.id)
             .maybeSingle();
 
-        if (profile == null) {
+        if (fetchedProfile == null) {
           targetRoute = '/profile-setup';
         } else if (!permissionsSetup) {
           targetRoute = '/permission-setup';
@@ -114,6 +108,29 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
             permissionsSetup ? '/dashboard' : '/permission-setup';
       }
     }
+
+    // Fetch weather data early at splash screen so dashboard shows it immediately
+    try {
+      var perm = await Geolocator.checkPermission();
+      if (perm == LocationPermission.denied && permissionsSetup) {
+        perm = await Geolocator.requestPermission();
+      }
+      if (perm == LocationPermission.always || perm == LocationPermission.whileInUse) {
+        final pos = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.low,
+          timeLimit: const Duration(seconds: 4),
+        );
+        await ref
+            .read(weatherProvider.notifier)
+            .fetchByCoords(pos.latitude, pos.longitude);
+      } else if (fetchedProfile != null &&
+          fetchedProfile['city'] != null &&
+          (fetchedProfile['city'] as String).isNotEmpty) {
+        await ref
+            .read(weatherProvider.notifier)
+            .fetchByCity(fetchedProfile['city'] as String);
+      }
+    } catch (_) {}
 
     // Ensure user sees the complete graphical loading sequence (at least 2.5s)
     final elapsed = DateTime.now().difference(startTime);
@@ -131,7 +148,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     _fadeController.dispose();
     _loadingController.dispose();
     _shimmerController.dispose();
-    _sparkleController.dispose();
     super.dispose();
   }
 
@@ -287,60 +303,31 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
                     const SizedBox(height: 14),
 
-                    // "Fetching data..." + Sparkle Star Row
-                    Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        // Centered "Fetching data..." with animated trailing dots
-                        AnimatedBuilder(
-                          animation: _loadingController,
-                          builder: (context, _) {
-                            final dotIndex =
-                                ((_loadingController.value * 8).toInt() % 4);
-                            final dots = '.' * dotIndex;
+                    // Centered "Fetching data..." with animated trailing dots
+                    AnimatedBuilder(
+                      animation: _loadingController,
+                      builder: (context, _) {
+                        final dotIndex =
+                            ((_loadingController.value * 8).toInt() % 4);
+                        final dots = '.' * dotIndex;
 
-                            return Text(
-                              'Fetching data$dots',
-                              style: const TextStyle(
-                                color: Color(0xEB8BB5E8),
-                                fontSize: 13,
-                                fontWeight: FontWeight.w400,
-                                letterSpacing: 0.7,
-                                shadows: [
-                                  Shadow(
-                                    color: Color(0x801E6FD9),
-                                    blurRadius: 6,
-                                  ),
-                                ],
+                        return Text(
+                          'Fetching data$dots',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            color: Color(0xEB8BB5E8),
+                            fontSize: 13,
+                            fontWeight: FontWeight.w400,
+                            letterSpacing: 0.7,
+                            shadows: [
+                              Shadow(
+                                color: Color(0x801E6FD9),
+                                blurRadius: 6,
                               ),
-                            );
-                          },
-                        ),
-
-                        // Four-pointed sparkle star on the right side
-                        Positioned(
-                          right: 8,
-                          child: AnimatedBuilder(
-                            animation: _sparkleController,
-                            builder: (context, _) {
-                              final scale =
-                                  0.85 + (_sparkleController.value * 0.35);
-                              final opacity =
-                                  0.65 + (_sparkleController.value * 0.35);
-                              return Transform.scale(
-                                scale: scale,
-                                child: Opacity(
-                                  opacity: opacity,
-                                  child: const SparkleStar(
-                                    size: 16,
-                                    color: Color(0xFF9CC3F3),
-                                  ),
-                                ),
-                              );
-                            },
+                            ],
                           ),
-                        ),
-                      ],
+                        );
+                      },
                     ),
                   ],
                 ),
@@ -351,68 +338,4 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       ),
     );
   }
-}
-
-/// A 4-pointed diamond sparkle star matching the graphic
-class SparkleStar extends StatelessWidget {
-  final double size;
-  final Color color;
-
-  const SparkleStar({
-    super.key,
-    this.size = 16,
-    this.color = const Color(0xFF9CC3F3),
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return CustomPaint(
-      size: Size(size, size),
-      painter: _SparkleStarPainter(color: color),
-    );
-  }
-}
-
-class _SparkleStarPainter extends CustomPainter {
-  final Color color;
-
-  _SparkleStarPainter({required this.color});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.fill;
-
-    final cx = size.width / 2;
-    final cy = size.height / 2;
-    final rOuter = size.width / 2;
-    final rInner = size.width * 0.16;
-
-    final path = Path();
-    for (int i = 0; i < 8; i++) {
-      final angle = (i * math.pi) / 4 - (math.pi / 2);
-      final r = (i % 2 == 0) ? rOuter : rInner;
-      final x = cx + r * math.cos(angle);
-      final y = cy + r * math.sin(angle);
-      if (i == 0) {
-        path.moveTo(x, y);
-      } else {
-        path.lineTo(x, y);
-      }
-    }
-    path.close();
-
-    // Subtle soft glow behind star
-    final glowPaint = Paint()
-      ..color = const Color(0x669CC3F3)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3);
-    canvas.drawPath(path, glowPaint);
-
-    canvas.drawPath(path, paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant _SparkleStarPainter oldDelegate) =>
-      oldDelegate.color != color;
 }

@@ -10,6 +10,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../data/services/health_service.dart';
+import '../../../data/services/widget_service.dart';
 import '../../../data/models/app_models.dart';
 import '../../../providers/app_providers.dart';
 
@@ -705,6 +706,7 @@ class _StepsScreenState extends ConsumerState<StepsScreen>
     await prefs.setInt(_keyStepsToday, steps);
     if (rawBaseline != null) await prefs.setInt(_keyBaseline, rawBaseline);
     await prefs.setInt('steps_${_uid}_${_todayWeekKey()}', steps);
+    WidgetService.syncMetrics(steps: steps);
     // Update steps water addon (0.04ml per step, capped 1200ml) — auto-resets next day
     final stepsWaterMl = (steps * 0.04).round().clamp(0, 1200);
     await UserProfileNotifier.setAddon(
@@ -1581,20 +1583,20 @@ class _DataSourceCard extends StatelessWidget {
                 : AppTheme.primaryBlue.withOpacity(0.1),
             borderRadius: BorderRadius.circular(10)),
         child: Center(child: Text(
-            dataSource == 'health_connect' ? '❤️'
+            dataSource == 'health_connect' ? '🚶'
                 : dataSource == 'pedometer' ? '👟' : '📡',
             style: const TextStyle(fontSize: 20)))),
       const SizedBox(width: 12),
       Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text(
-          dataSource == 'health_connect' ? 'Health Connect'
+          dataSource == 'health_connect' ? 'Live Step Sync'
               : dataSource == 'pedometer' ? 'Hardware Pedometer'
               : dataSource == 'accelerometer' ? 'Motion Sensor'
               : 'Initializing…',
           style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
         Text(
           dataSource == 'health_connect'
-              ? 'Most accurate · Adaptive sync'
+              ? 'Real-time sync · Adaptive pedometer'
               : dataSource == 'pedometer'
                   ? 'Hardware chip · Real-time steps'
                   : 'Gravity-compensated · Keep phone in pocket',
@@ -1723,7 +1725,7 @@ class _SourceBadge extends StatelessWidget {
     if (isSleeping) {
       label = '😴 Sleeping'; color = Colors.purpleAccent;
     } else if (source == 'health_connect') {
-      label = '❤️ HC Live'; color = Colors.greenAccent;
+      label = status == 'walking' ? '🚶 Walking' : '🚶 Active'; color = Colors.greenAccent;
     } else if (source == 'pedometer') {
       label = status == 'walking' ? '🚶 Walking' : '🧍 Idle';
       color = status == 'walking' ? Colors.greenAccent : Colors.white70;

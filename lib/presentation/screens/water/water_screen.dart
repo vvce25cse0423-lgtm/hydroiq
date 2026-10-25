@@ -7,6 +7,7 @@ import 'package:speech_to_text/speech_to_text.dart' as stt;
 import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../data/models/app_models.dart';
+import '../../../data/services/widget_service.dart';
 import '../../../providers/app_providers.dart';
 
 class WaterScreen extends ConsumerStatefulWidget {
@@ -276,6 +277,11 @@ class _WaterScreenState extends ConsumerState<WaterScreen>
     final weather  = ref.watch(weatherProvider).valueOrNull;
     final progress = (totalMl / goalMl).clamp(0.0, 1.0);
     final isDark   = Theme.of(context).brightness == Brightness.dark;
+
+    // Keep home screen widget synchronized with the exact dashboard limit & current intake
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      WidgetService.updateWidget(currentMl: totalMl, goalMl: goalMl);
+    });
 
     return Scaffold(
       body: CustomScrollView(slivers: [
