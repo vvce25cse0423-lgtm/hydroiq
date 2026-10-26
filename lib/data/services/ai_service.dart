@@ -63,6 +63,9 @@ Guidelines:
 
         // 2. Fallback model if primary model is busy/rate-limited
         if (response.statusCode != 200) {
+          final fallbackModel = AppConstants.groqDefaultModel == 'openai/gpt-oss-20b'
+              ? 'openai/gpt-oss-120b'
+              : 'openai/gpt-oss-20b';
           response = await http.post(
             Uri.parse(_apiUrl),
             headers: {
@@ -70,7 +73,7 @@ Guidelines:
               'Authorization': 'Bearer $_apiKey',
             },
             body: jsonEncode({
-              'model': 'openai/gpt-oss-20b',
+              'model': fallbackModel,
               'messages': messages,
               'temperature': 0.7,
               'max_tokens': 1024,

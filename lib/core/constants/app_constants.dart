@@ -29,7 +29,7 @@ class AppConstants {
       'https://api.groq.com/openai/v1/chat/completions';
   static const String groqDefaultModel = String.fromEnvironment(
     'GROQ_MODEL',
-    defaultValue: 'openai/gpt-oss-120b',
+    defaultValue: 'openai/gpt-oss-20b',
   );
 
   static bool get isSupabaseConfigured =>
