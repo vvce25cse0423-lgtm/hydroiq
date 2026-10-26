@@ -1,4 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../core/constants/app_constants.dart';
 import '../models/app_models.dart';
 
 class SupabaseService {
@@ -48,10 +49,13 @@ class SupabaseService {
     } catch (_) {}
   }
 
-  User? get currentUser =>
-      _client.auth.currentUser ?? _client.auth.currentSession?.user;
+  User? get currentUser => AppConstants.isSupabaseConfigured
+      ? (_client.auth.currentUser ?? _client.auth.currentSession?.user)
+      : null;
 
-  Stream<AuthState> get authStateChanges => _client.auth.onAuthStateChange;
+  Stream<AuthState> get authStateChanges => AppConstants.isSupabaseConfigured
+      ? _client.auth.onAuthStateChange
+      : const Stream.empty();
 
   // ─── USER PROFILE ────────────────────────────────────────────────────────
 

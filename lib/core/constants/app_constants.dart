@@ -5,24 +5,33 @@ class AppConstants {
   static const String appVersion    = '1.0.0';
   static const String privacyPolicyUrl = 'https://hydroiq.app/privacy-policy';
 
-  // Keys from --dart-define; fall back to your actual project values
+  // Keys injected at build-time via --dart-define or --dart-define-from-file=.env
   static const String supabaseUrl = String.fromEnvironment(
     'SUPABASE_URL',
-    defaultValue: 'https://nmnkkmmjevcvvfzifbbn.supabase.co',
+    defaultValue: '',
   );
   static const String supabaseAnonKey = String.fromEnvironment(
     'SUPABASE_ANON_KEY',
-    defaultValue: 'sb_publishable_TOvECK5SJrnK5bGawJDU0g_FvB_17PT',
+    defaultValue: '',
   );
   static const String weatherApiKey = String.fromEnvironment(
-    'WEATHER_API_KEY', defaultValue: '');
+    'WEATHER_API_KEY',
+    defaultValue: '',
+  );
   static const String weatherBaseUrl =
       'https://api.openweathermap.org/data/2.5';
 
   static const String geminiApiKey = String.fromEnvironment(
-    'GEMINI_API_KEY', defaultValue: '');
+    'GEMINI_API_KEY',
+    defaultValue: '',
+  );
   static const String geminiBaseUrl =
       'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+
+  static bool get isSupabaseConfigured =>
+      supabaseUrl.isNotEmpty && supabaseAnonKey.isNotEmpty;
+  static bool get isWeatherConfigured => weatherApiKey.isNotEmpty;
+  static bool get isGeminiConfigured => geminiApiKey.isNotEmpty;
 
   static const String keyOnboardingDone     = 'onboarding_done';
   static const String keyUserId             = 'user_id';

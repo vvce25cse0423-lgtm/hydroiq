@@ -75,8 +75,10 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     final permissionsSetup =
         prefs.getBool(AppConstants.keyPermissionsSetup) ?? false;
 
-    final supabase = Supabase.instance.client;
-    final user = supabase.auth.currentSession?.user ?? supabase.auth.currentUser;
+    final user = AppConstants.isSupabaseConfigured
+        ? (Supabase.instance.client.auth.currentSession?.user ??
+            Supabase.instance.client.auth.currentUser)
+        : null;
 
     ref.invalidate(userProfileProvider);
     ref.invalidate(todayLogsProvider);
@@ -86,11 +88,11 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
     if (!onboardingDone) {
       targetRoute = '/onboarding';
-    } else if (user == null) {
+    } else if (AppConstants.isSupabaseConfigured && user == null) {
       targetRoute = '/login';
-    } else {
+    } else if (AppConstants.isSupabaseConfigured && user != null) {
       try {
-        fetchedProfile = await supabase
+        fetchedProfile = await Supabase.instance.client
             .from('users')
             .select()
             .eq('id', user.id)
@@ -107,6 +109,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
         targetRoute =
             permissionsSetup ? '/dashboard' : '/permission-setup';
       }
+    } else {
+      targetRoute = permissionsSetup ? '/dashboard' : '/permission-setup';
     }
 
     // Fetch weather data early at splash screen so dashboard shows it immediately

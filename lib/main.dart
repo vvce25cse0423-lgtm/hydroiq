@@ -31,11 +31,17 @@ Future<void> main() async {
     DeviceOrientation.portraitDown,
   ]);
 
-  // Supabase — anonKey is correct for supabase_flutter v2
-  await Supabase.initialize(
-    url: AppConstants.supabaseUrl,
-    anonKey: AppConstants.supabaseAnonKey,
-  );
+  // Supabase — initialize only if credentials are provided at build/runtime
+  if (AppConstants.isSupabaseConfigured) {
+    try {
+      await Supabase.initialize(
+        url: AppConstants.supabaseUrl,
+        anonKey: AppConstants.supabaseAnonKey,
+      );
+    } catch (e) {
+      debugPrint('Supabase initialization failed: $e');
+    }
+  }
 
   _container = ProviderContainer();
 

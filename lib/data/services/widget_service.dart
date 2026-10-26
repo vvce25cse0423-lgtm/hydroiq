@@ -48,21 +48,23 @@ Future<void> widgetBackgroundCallback(Uri? uri) async {
     } catch (_) {}
 
     // If Supabase is initialized and user is logged in, sync log directly
-    try {
-      final user = Supabase.instance.client.auth.currentUser;
-      if (user != null) {
-        final log = HydrationLog(
-          id: DateTime.now().millisecondsSinceEpoch.toString(),
-          userId: user.id,
-          amountMl: amount,
-          loggedAt: DateTime.now(),
-          note: 'Quick-add via Home Screen Widget',
-        );
-        await SupabaseService().addHydrationLog(log);
-        // Clear pending since directly logged
-        await prefs.setInt('pending_widget_added_ml', 0);
-      }
-    } catch (_) {}
+    if (AppConstants.isSupabaseConfigured) {
+      try {
+        final user = Supabase.instance.client.auth.currentUser;
+        if (user != null) {
+          final log = HydrationLog(
+            id: DateTime.now().millisecondsSinceEpoch.toString(),
+            userId: user.id,
+            amountMl: amount,
+            loggedAt: DateTime.now(),
+            note: 'Quick-add via Home Screen Widget',
+          );
+          await SupabaseService().addHydrationLog(log);
+          // Clear pending since directly logged
+          await prefs.setInt('pending_widget_added_ml', 0);
+        }
+      } catch (_) {}
+    }
   }
 }
 

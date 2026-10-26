@@ -1,11 +1,10 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import '../../core/constants/app_constants.dart';
 
 class AiService {
-  static const String _apiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
-  // Key is stored as a runtime constant (not compile-time) so it is always available
-  // regardless of whether --dart-define was passed at build time.
-  static const String _apiKey = 'AIzaSyDk0vAga4ylbycpRZTEwzLLt2YD2cRqzHE';
+  static const String _apiUrl = AppConstants.geminiBaseUrl;
+  static String get _apiKey => AppConstants.geminiApiKey;
 
   static const String _systemPrompt = '''
 You are HydroIQ AI — a brilliant, friendly AI assistant embedded in the HydroIQ health app.

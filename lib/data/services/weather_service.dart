@@ -5,10 +5,13 @@ import '../models/app_models.dart';
 
 /// Fetches real-time weather from OpenWeatherMap.
 class WeatherService {
-  static const String _apiKey = '624d64f50bcf3cf596ccf7693dce142f';
+  static String get _apiKey => AppConstants.weatherApiKey;
 
   /// Fetch weather by GPS coordinates
   Future<WeatherData> fetchByCoordinates(double lat, double lon) async {
+    if (_apiKey.isEmpty) {
+      throw const WeatherKeyInvalidException();
+    }
     final url = '${AppConstants.weatherBaseUrl}/weather'
         '?lat=$lat&lon=$lon&appid=$_apiKey&units=metric';
     return _fetch(url);
@@ -16,6 +19,9 @@ class WeatherService {
 
   /// Fetch weather by city name
   Future<WeatherData> fetchByCity(String city) async {
+    if (_apiKey.isEmpty) {
+      throw const WeatherKeyInvalidException();
+    }
     final url = '${AppConstants.weatherBaseUrl}/weather'
         '?q=${Uri.encodeComponent(city)}&appid=$_apiKey&units=metric';
     return _fetch(url);

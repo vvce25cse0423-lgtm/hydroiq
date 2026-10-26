@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
+import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../data/services/weather_service.dart';
 import '../../../providers/app_providers.dart';
@@ -23,7 +24,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
   Timer? _debounce;
   bool  _selectingFromList = false;
 
-  static const _geoApiKey = '624d64f50bcf3cf596ccf7693dce142f';
+  static String get _geoApiKey => AppConstants.weatherApiKey;
 
   @override
   void initState() {
@@ -50,6 +51,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
   }
 
   Future<void> _fetchSuggestions(String query) async {
+    if (_geoApiKey.isEmpty) return;
     try {
       final url = 'http://api.openweathermap.org/geo/1.0/direct'
           '?q=${Uri.encodeComponent(query)}&limit=5&appid=$_geoApiKey';

@@ -30,7 +30,9 @@ Thumbs.db
 
 # Secrets (never commit these)
 **/secrets.dart
-**/.env
+.env
+.env.*
+!.env.example
 **/google-services.json
 **/GoogleService-Info.plist
 

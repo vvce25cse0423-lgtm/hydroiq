@@ -8,6 +8,7 @@ import 'package:sensors_plus/sensors_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:fl_chart/fl_chart.dart';
+import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../data/services/health_service.dart';
 import '../../../data/services/widget_service.dart';
@@ -117,7 +118,9 @@ class _StepsScreenState extends ConsumerState<StepsScreen>
   }
 
   Future<void> _init() async {
-    _uid = Supabase.instance.client.auth.currentUser?.id ?? 'local';
+    _uid = AppConstants.isSupabaseConfigured
+        ? (Supabase.instance.client.auth.currentUser?.id ?? 'local')
+        : 'local';
     await _loadPersisted();
     await _loadCelebrated();
     await _loadWeekHistory();
