@@ -28,6 +28,19 @@ class SupabaseService {
     }
   }
 
+  Future<bool> signInWithGoogle() async {
+    try {
+      return await _client.auth.signInWithOAuth(
+        OAuthProvider.google,
+        redirectTo: 'io.supabase.hydroiq://login-callback/',
+      );
+    } on AuthException {
+      rethrow;
+    } catch (e) {
+      throw AuthException('Google sign-in failed. Please check your connection.');
+    }
+  }
+
   Future<void> signOut() async {
     try { await _client.auth.signOut(); } catch (_) {}
   }
