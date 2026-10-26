@@ -85,55 +85,59 @@ class HydroIQWidgetProvider : HomeWidgetProvider() {
         widgetData: SharedPreferences
     ) {
         appWidgetIds.forEach { widgetId ->
-            val views = RemoteViews(context.packageName, R.layout.hydroiq_widget).apply {
-                val currentMl = widgetData.getString("current_ml", "0") ?: "0"
-                val goalMl = widgetData.getString("goal_ml", "2,000") ?: "2,000"
-                val progress = widgetData.getInt("progress", 0)
-                val percentage = widgetData.getString("percentage", "0%") ?: "0%"
-                val statusText = widgetData.getString("status_text", "Daily Hydration Goal") ?: "Daily Hydration Goal"
-                val stepsText = widgetData.getString("steps_text", "0 steps") ?: "0 steps"
-                val sleepText = widgetData.getString("sleep_text", "-- hrs") ?: "-- hrs"
+            try {
+                val views = RemoteViews(context.packageName, R.layout.hydroiq_widget).apply {
+                    val currentMl = widgetData.getString("current_ml", "0") ?: "0"
+                    val goalMl = widgetData.getString("goal_ml", "2,000") ?: "2,000"
+                    val progress = widgetData.getInt("progress", 0)
+                    val percentage = widgetData.getString("percentage", "0%") ?: "0%"
+                    val statusText = widgetData.getString("status_text", "Daily Hydration Goal") ?: "Daily Hydration Goal"
+                    val stepsText = widgetData.getString("steps_text", "0 steps") ?: "0 steps"
+                    val sleepText = widgetData.getString("sleep_text", "-- hrs") ?: "-- hrs"
 
-                setTextViewText(R.id.widget_current_ml, "$currentMl ml")
-                setTextViewText(R.id.widget_goal_ml, "/ $goalMl ml")
-                setTextViewText(R.id.widget_percentage, percentage)
-                setTextViewText(R.id.widget_status, statusText)
-                setProgressBar(R.id.widget_progress_bar, 100, progress, false)
-                setTextViewText(R.id.widget_steps_val, stepsText)
-                setTextViewText(R.id.widget_sleep_val, sleepText)
+                    setTextViewText(R.id.widget_current_ml, "$currentMl ml")
+                    setTextViewText(R.id.widget_goal_ml, "/ $goalMl ml")
+                    setTextViewText(R.id.widget_percentage, percentage)
+                    setTextViewText(R.id.widget_status, statusText)
+                    setProgressBar(R.id.widget_progress_bar, 100, progress, false)
+                    setTextViewText(R.id.widget_steps_val, stepsText)
+                    setTextViewText(R.id.widget_sleep_val, sleepText)
 
-                // Quick add +250ml explicit PendingIntent
-                val flags = if (Build.VERSION.SDK_INT >= 23) {
-                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-                } else {
-                    PendingIntent.FLAG_UPDATE_CURRENT
+                    // Quick add +250ml explicit PendingIntent
+                    val flags = if (Build.VERSION.SDK_INT >= 23) {
+                        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                    } else {
+                        PendingIntent.FLAG_UPDATE_CURRENT
+                    }
+
+                    val intent250 = Intent(context, HydroIQWidgetProvider::class.java).apply {
+                        action = ACTION_ADD_WATER
+                        putExtra(EXTRA_AMOUNT, 250)
+                    }
+                    val pIntent250 = PendingIntent.getBroadcast(context, 250, intent250, flags)
+                    setOnClickPendingIntent(R.id.btn_add_250, pIntent250)
+
+                    // Quick add +500ml explicit PendingIntent
+                    val intent500 = Intent(context, HydroIQWidgetProvider::class.java).apply {
+                        action = ACTION_ADD_WATER
+                        putExtra(EXTRA_AMOUNT, 500)
+                    }
+                    val pIntent500 = PendingIntent.getBroadcast(context, 500, intent500, flags)
+                    setOnClickPendingIntent(R.id.btn_add_500, pIntent500)
+
+                    // Tapping header area or open button launches MainActivity
+                    val openAppIntent = HomeWidgetLaunchIntent.getActivity(
+                        context,
+                        MainActivity::class.java,
+                        Uri.parse("hydroiq://open")
+                    )
+                    setOnClickPendingIntent(R.id.widget_header_area, openAppIntent)
+                    setOnClickPendingIntent(R.id.btn_open_app, openAppIntent)
                 }
-
-                val intent250 = Intent(context, HydroIQWidgetProvider::class.java).apply {
-                    action = ACTION_ADD_WATER
-                    putExtra(EXTRA_AMOUNT, 250)
-                }
-                val pIntent250 = PendingIntent.getBroadcast(context, 250, intent250, flags)
-                setOnClickPendingIntent(R.id.btn_add_250, pIntent250)
-
-                // Quick add +500ml explicit PendingIntent
-                val intent500 = Intent(context, HydroIQWidgetProvider::class.java).apply {
-                    action = ACTION_ADD_WATER
-                    putExtra(EXTRA_AMOUNT, 500)
-                }
-                val pIntent500 = PendingIntent.getBroadcast(context, 500, intent500, flags)
-                setOnClickPendingIntent(R.id.btn_add_500, pIntent500)
-
-                // Tapping header area or open button launches MainActivity
-                val openAppIntent = HomeWidgetLaunchIntent.getActivity(
-                    context,
-                    MainActivity::class.java,
-                    Uri.parse("hydroiq://open")
-                )
-                setOnClickPendingIntent(R.id.widget_header_area, openAppIntent)
-                setOnClickPendingIntent(R.id.btn_open_app, openAppIntent)
+                appWidgetManager.updateAppWidget(widgetId, views)
+            } catch (e: Exception) {
+                e.printStackTrace()
             }
-            appWidgetManager.updateAppWidget(widgetId, views)
         }
     }
 }

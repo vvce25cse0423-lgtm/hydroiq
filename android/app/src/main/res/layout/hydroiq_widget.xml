@@ -141,14 +141,11 @@
                 android:textStyle="bold" />
         </LinearLayout>
 
-        <View
-            android:layout_width="8dp"
-            android:layout_height="1dp" />
-
-        <!-- Sleep Chip -->
+        <!-- Sleep Chip (spaced using marginStart instead of unsupported <View>) -->
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
             android:layout_weight="1"
             android:background="@drawable/widget_metric_bg"
             android:gravity="center_vertical"
