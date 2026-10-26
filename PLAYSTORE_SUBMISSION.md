@@ -8,7 +8,7 @@ Copy `.env.example` to `.env` and fill in all values:
 SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_ANON_KEY=your_supabase_anon_key
 WEATHER_API_KEY=your_openweather_key
-GEMINI_API_KEY=your_gemini_key
+GROQ_API_KEY=your_groq_api_key
 ```
 Never commit `.env` to git.
 

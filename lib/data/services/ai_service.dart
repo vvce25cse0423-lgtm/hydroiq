@@ -3,24 +3,25 @@ import 'package:http/http.dart' as http;
 import '../../core/constants/app_constants.dart';
 
 class AiService {
-  static const String _apiUrl = AppConstants.geminiBaseUrl;
-  static String get _apiKey => AppConstants.geminiApiKey;
+  static const String _apiUrl = AppConstants.groqBaseUrl;
+  static String get _apiKey => AppConstants.groqApiKey;
 
   static const String _systemPrompt = '''
-You are HydroIQ AI — a brilliant, friendly AI assistant embedded in the HydroIQ health app.
+You are HydroIQ AI — an exceptionally intelligent, friendly, and helpful AI assistant embedded in the HydroIQ app.
 
-You MUST answer EVERY question directly and accurately. Never redirect, never ask for clarification on simple questions.
+You can answer ANY question in the world on ANY topic:
+- General knowledge, world facts, geography, culture, science, and history
+- Mathematics, arithmetic, calculus, and scientific problem-solving
+- Coding, programming languages, algorithms, and technical advice
+- Health, hydration, fitness, nutrition, and wellness
+- Creative writing, explanations, brainstorming, and daily life questions
 
-Rules:
-- ALWAYS give a direct, complete answer immediately
-- For math (2+2, 5*6, sqrt(9) etc): compute and give the number right away. Show working if complex
-- For simple facts: answer in one clear sentence
-- For general knowledge: give a real, accurate, helpful answer
-- Never say "could you rephrase" for any clear question
-- Never refuse to answer anything
-- Be concise (under 200 words) but complete
-- Use emojis naturally
-- For health/hydration questions: give accurate evidence-based answers
+Guidelines:
+- ALWAYS provide a direct, accurate, and helpful answer immediately.
+- Never refuse to answer general knowledge or diverse questions.
+- For math and calculations: calculate and present the answer clearly.
+- Maintain a warm, encouraging, and natural conversational tone with emojis where appropriate.
+- Keep answers concise, clear, and easy to read on mobile.
 ''';
 
   Future<String> sendMessage(String userMessage, List<Map<String, String>> history) async {
@@ -30,47 +31,61 @@ Rules:
 
     if (_apiKey.isNotEmpty) {
       try {
-        final contents = <Map<String, dynamic>>[];
+        final messages = <Map<String, String>>[
+          {'role': 'system', 'content': _systemPrompt},
+        ];
         final recent = history.length > 12 ? history.sublist(history.length - 12) : history;
         // Skip the last item if it matches userMessage (avoid duplication)
         for (int i = 0; i < recent.length - 1; i++) {
           final msg = recent[i];
-          contents.add({
-            'role': msg['role'] == 'user' ? 'user' : 'model',
-            'parts': [{'text': msg['content'] ?? ''}],
-          });
+          final role = msg['role'] == 'user' ? 'user' : 'assistant';
+          messages.add({'role': role, 'content': msg['content'] ?? ''});
         }
-        contents.add({
+        messages.add({
           'role': 'user',
-          'parts': [{'text': userMessage}],
+          'content': userMessage,
         });
 
-        final body = jsonEncode({
-          'system_instruction': {'parts': [{'text': _systemPrompt}]},
-          'contents': contents,
-          'generationConfig': {
-            'temperature': 0.7,
-            'maxOutputTokens': 500,
-            'topP': 0.9,
+        // 1. Primary call with default Groq model (openai/gpt-oss-120b)
+        var response = await http.post(
+          Uri.parse(_apiUrl),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $_apiKey',
           },
-        });
-
-        final response = await http.post(
-          Uri.parse('$_apiUrl?key=$_apiKey'),
-          headers: {'Content-Type': 'application/json'},
-          body: body,
+          body: jsonEncode({
+            'model': AppConstants.groqDefaultModel,
+            'messages': messages,
+            'temperature': 0.7,
+            'max_tokens': 1024,
+          }),
         ).timeout(const Duration(seconds: 20));
+
+        // 2. Fallback model if primary model is busy/rate-limited
+        if (response.statusCode != 200) {
+          response = await http.post(
+            Uri.parse(_apiUrl),
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $_apiKey',
+            },
+            body: jsonEncode({
+              'model': 'openai/gpt-oss-20b',
+              'messages': messages,
+              'temperature': 0.7,
+              'max_tokens': 1024,
+            }),
+          ).timeout(const Duration(seconds: 20));
+        }
 
         if (response.statusCode == 200) {
           final data = jsonDecode(response.body) as Map<String, dynamic>;
-          final candidates = data['candidates'] as List?;
-          if (candidates != null && candidates.isNotEmpty) {
-            final content = candidates.first['content'] as Map<String, dynamic>?;
-            final parts = content?['parts'] as List?;
-            if (parts != null && parts.isNotEmpty) {
-              final text = (parts.first as Map<String, dynamic>)['text'] as String? ?? '';
-              if (text.isNotEmpty) return text;
-            }
+          final choices = data['choices'] as List?;
+          if (choices != null && choices.isNotEmpty) {
+            final firstChoice = choices.first as Map<String, dynamic>?;
+            final message = firstChoice?['message'] as Map<String, dynamic>?;
+            final content = message?['content'] as String? ?? '';
+            if (content.isNotEmpty) return content.trim();
           }
         }
       } catch (_) {}

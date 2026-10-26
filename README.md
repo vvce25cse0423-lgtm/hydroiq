@@ -2,142 +2,140 @@
 
 **Developer:** Nitin Mahadev  
 **Platform:** Android (Flutter)  
-**Version:** 1.0.0
+**Version:** 1.0.0  
+**Repository:** [github.com/vvce25cse0423-lgtm/hydroiq](https://github.com/vvce25cse0423-lgtm/hydroiq)
 
 ---
 
-## 🌟 Features
+## 🌟 Key Features
 
 ### 💧 Hydration Dashboard
-- Animated water-fill circle showing daily progress (live wave animation)
-- Quick-add buttons: 100ml, 250ml, 500ml, 1L
-- Custom amount entry with voice-to-text ("I drank 2 glasses of water")
-- **Water sound** plays on every log entry
-- **Daily safety limit** of 5L — prevents over-hydration
-- Today's log with swipe-to-delete and visible delete buttons
-- Clear All logs with confirmation
-- Weather-based hydration tips (adjusts goal for hot days)
-- Persistent notification in shade: tap +250ml / +500ml anytime — even with app closed
+- Animated water-fill circle with live wave motion and percentage indicator.
+- Quick-add buttons: 100ml, 250ml, 500ml, 1L.
+- Custom amount entry with voice-to-text ("I drank 2 glasses of water").
+- **Water sound effects** on every log entry.
+- **Daily safety limit** (5L) preventing over-hydration.
+- Real-time logging with swipe-to-delete and Clear All confirmation.
+- Weather-based intake adjustments (auto-increases on hotter days).
+- Persistent notification shade with one-tap quick-add buttons (+250ml / +500ml) even when the app is closed.
 
-### 👟 Step Counter
-- Hardware pedometer (primary) with automatic activity recognition
-- **Smart accelerometer fallback** with anti-vibration filter — ignores phone vibrations, drops, and taps; only counts real walking steps using rhythmic cadence detection
-- Step count **persists across app restarts** (SharedPreferences)
-- **Weekly steps graph** — bar chart showing last 7 days
-- Real-time status: Walking / Stopped / Sensor Mode
-- Calories burned and distance calculated
-- Hydration tip based on step count
+### 📱 Android Home Screen Widget
+- Quick-add **+250ml** widget directly from your Android home screen without opening the app.
+- Real-time hydration level and daily goal progress synchronized seamlessly with the app database.
+- Modern visual styling with glassmorphism, clean typography, and interactive button feedback.
+
+### 🔐 Authentication & Google Sign-In
+- Email & password sign-up and sign-in with auto-confirmation.
+- **One-tap Google Sign-In** integrated into both Login and Signup screens using official Google branding.
+- Secure Supabase OAuth with deep-link redirection (`io.supabase.hydroiq://login-callback/`).
+- Seamless guest / offline fallback when backend credentials are not supplied.
+
+### 👟 Step & Activity Tracking
+- Dual tracking: Hardware pedometer (primary) with automatic activity recognition + **smart accelerometer fallback** with rhythmic cadence filtering to eliminate false positives from phone vibrations or bumps.
+- Step count persistence across app restarts.
+- Weekly interactive step charts (fl_chart) showing last 7 days.
+- Real-time sensor status (Walking / Stopped / Sensor Mode) with estimated calories burned and distance.
+- Health Connect integration for reading step counts.
 
 ### 😴 Sleep Tracker
-- Voice trigger: say **"I am going to sleep"** to start tracking
-- Voice stop: say **"Good morning"** or **"Wake up"** to stop
-- **Sleep state persists** — reopen app and tracking continues from where it left off
-- Background monitoring via WorkManager — auto-stops sleep when phone is actively used for 5+ minutes
-- Auto-hydration added on wake: poor sleep (<5h) → +500ml, good sleep (7-9h) → +200ml
-- Animated moon/stars UI while tracking
-- Sleep score (0-100) based on duration
-- Recent sessions history
+- Voice triggers: "I am going to sleep" to start, "Good morning" or "Wake up" to stop.
+- Sleep session state persistence across app lifecycle.
+- Automated background monitoring via WorkManager.
+- Auto-hydration bonus on wake-up: Poor sleep (<5h) → +500ml, Good sleep (7–9h) → +200ml.
+- Night-sky animated interface with sleep quality scoring (0–100).
 
-### 🧠 AI Chat
-- **Answers ALL questions** — science, math, history, coding, and general knowledge
-- Voice input: tap the **mic button** to speak your question, get instant answer
-- Hydration and wellness specialization
-- Offline fallback knowledge base (works without internet)
-- Typing indicator with animated dots
-- Quick suggestion chips
-- Clear chat button
+### 🤖 World-Class AI Chatbot (Powered by Groq)
+- **Universal General Knowledge**: Answers ANY question in the world on ANY topic — mathematics, science, world history, coding, health, fitness, or daily advice.
+- **Ultra-Fast Groq Inference**: High-speed, high-accuracy conversational AI with automatic fallback model recovery.
+- Voice input: Tap the microphone to dictate questions directly.
+- Offline knowledge base: Embedded instant responses for core facts and math even when offline.
+- Conversation history persistence in Supabase.
 
-### 📊 Stats & Analytics
-- Weekly hydration bar chart
-- 7-day water intake summary
-- Current streak tracking
-- **Animated achievement badges**:
-  - 💧 First Drop (day 1)
-  - 🌱 4-Day Explorer (4 days used)
-  - 🔥 7-Day Streak
-  - ⭐ 14-Day Hero
-  - 🏆 30-Day Champion
-- **Data updates instantly** when switching from Hydrate tab
-
-### 🔔 Notifications
-- **Hourly hydration reminders** every 2 hours (8am–10pm)
-- Persistent progress notification in notification shade
-- Quick-add buttons (+250ml / +500ml) directly from notification
-- Sleep auto-stop notification on wake detection
+### 📊 Stats, Streaks & Badges
+- Weekly hydration bar charts and historical analytics.
+- Daily streaks and milestone badges (First Drop, 4-Day Explorer, 7-Day Streak, 14-Day Hero, 30-Day Champion).
+- Instant metric refresh between views.
 
 ### 🌦️ Weather Integration
-- Live temperature display in app bar
-- Automatically adjusts daily water goal based on temperature
-- Hot weather alert with extra intake recommendation
-
-### ⚙️ Settings & Profile
-- Dark / Light theme toggle
-- Custom daily goal
-- Profile setup (name, weight, activity level)
-- Notification interval settings
+- Pre-fetched weather data during splash initialization for instant display on the dashboard.
+- Temperature and condition badge that adjusts your recommended hydration intake dynamically.
 
 ---
 
 ## 🛠️ Tech Stack
 
-| Layer | Technology |
+| Component | Technology |
 |---|---|
-| Framework | Flutter 3.24.5 (Dart) |
-| State Management | Riverpod 2.x |
-| Backend / Auth | Supabase (PostgreSQL + Auth) |
-| Local Storage | SharedPreferences, Hive |
-| Charts | fl_chart |
-| Notifications | flutter_local_notifications + timezone |
-| Background Tasks | WorkManager |
-| Step Detection | pedometer + sensors_plus |
-| Voice Input | speech_to_text |
-| Audio | audioplayers |
-| Location | geolocator |
-| HTTP | http package |
-| UI Animations | flutter_animate, AnimationController |
-| Fonts | Google Fonts |
-| AI | Google Gemini 1.5 Flash + offline fallback |
+| Framework | Flutter 3.24.5 (Dart 3.x) |
+| Architecture / State | Riverpod 2.x (StateNotifier / Providers) |
+| Backend & Auth | Supabase (PostgreSQL, Row-Level Security, OAuth) |
+| AI Engine | Groq API (High-performance inference + offline fallback) |
+| Weather | OpenWeatherMap API |
+| Home Screen Widget | `home_widget` package (Android RemoteViews & AppWidgetProvider) |
+| Step Detection | `pedometer`, `sensors_plus`, `health` (Health Connect) |
+| Voice & Audio | `speech_to_text`, `audioplayers` |
+| Notifications & Tasks | `flutter_local_notifications`, `timezone`, `workmanager` |
+| Local Storage | `shared_preferences`, `hive_flutter` |
+| Charts & UI | `fl_chart`, `flutter_animate`, Google Fonts |
 
 ---
 
-## 🚀 Getting Started
+## 🔒 Security & Environment Configuration
 
-```bash
-# Clone the repository
-git clone https://github.com/vvce25cse0423-lgtm/hydroiq.git
-cd hydroiq
+All API keys and secrets are injected at compile time. **No sensitive API keys are ever stored in the tracked source code.**
 
-# Install dependencies
-flutter pub get
+### Setting Up Environment Variables
 
-# Run on Android device/emulator
-flutter run
+1. Copy `.env.example` to `.env`:
+   ```bash
+   cp .env.example .env
+   ```
 
-# Build release APK
-flutter build apk --release --no-tree-shake-icons
-```
+2. Fill in your keys in `.env`:
+   ```env
+   SUPABASE_URL=https://your-project.supabase.co
+   SUPABASE_ANON_KEY=your_supabase_anon_key
+   WEATHER_API_KEY=your_openweather_key
+   GROQ_API_KEY=your_groq_api_key
+   ```
+   *(Note: `.env` is ignored by `.gitignore` and must never be committed)*.
+
+---
+
+## 🚀 Building & Running
 
 ### Prerequisites
-- Flutter 3.24.5+
-- Android SDK 35
+- Flutter 3.24.5
+- Android SDK 35 / NDK 27.0.12077973
 - Java 17
-- Supabase project (update URL and anon key in `lib/core/constants/app_constants.dart`)
+
+### Development Run
+```bash
+# Run with environment variables loaded from .env
+flutter run --dart-define-from-file=.env
+```
+
+### Release APK Build
+```bash
+# Build release APK
+flutter build apk --release --no-tree-shake-icons --dart-define-from-file=.env
+```
 
 ---
 
 ## 🗄️ Database Schema
 
-See `supabase_schema.sql` for the full Supabase PostgreSQL schema including:
-- `users` — profile data
-- `hydration_logs` — water intake logs
-- `step_logs` — daily step records
-- `sleep_logs` — sleep sessions
-- `ai_chats` — conversation history
-- `settings` — user preferences
+The database runs on Supabase PostgreSQL. Core tables:
+- `users`: User profiles, goals, and metric preferences.
+- `hydration_logs`: Individual intake timestamps, volumes, and beverage types.
+- `step_logs`: Daily step counts, distance, and calories.
+- `sleep_logs`: Sleep sessions, start/end times, and quality ratings.
+- `ai_chats`: AI chatbot conversation histories.
+- `settings`: Application and notification configurations.
 
 ---
 
-## 👨‍💻 Developer
+## 👨‍💻 Author
 
 **Nitin Mahadev**  
 GitHub: [@vvce25cse0423-lgtm](https://github.com/vvce25cse0423-lgtm)

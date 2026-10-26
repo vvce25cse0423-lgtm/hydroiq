@@ -23,11 +23,11 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
 
   final _suggestions = const [
     'How much water should I drink today? 💧',
-    'What are signs of dehydration?',
-    'Best time to hydrate during workouts?',
-    'Does coffee count toward hydration?',
-    'How does sleep affect hydration?',
-    'Tips for drinking more water daily',
+    'What is 15 * 24? 🔢',
+    'Why is the sky blue? 🌤️',
+    'What are signs of dehydration? ⚠️',
+    'Explain quantum computing in simple terms 💻',
+    'Tips for drinking more water daily 🚰',
   ];
 
   @override
@@ -35,8 +35,8 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
     super.initState();
     _messages.add(const _Msg(
         role: 'assistant',
-        text: 'Hello! I\'m your HydroIQ AI coach 💧\n'
-            'Ask me anything — hydration, health, fitness, or general questions!'));
+        text: 'Hello! I\'m HydroIQ AI 🤖\n'
+            'Ask me anything in the world — science, math, history, coding, health, or general questions!'));
     _initSpeech();
   }
 

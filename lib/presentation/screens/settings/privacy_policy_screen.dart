@@ -29,7 +29,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
 
           _Section('2. How We Use Your Data', [
             'To provide core app features: hydration tracking, step counting, sleep analysis, and personalised goals.',
-            'To generate AI-powered health insights using Google Gemini. Only anonymised, aggregated data is sent — never your name or email.',
+            'To generate AI-powered insights using Groq AI. Only anonymised, aggregated data is sent — never your name or email.',
             'To send optional local notifications for hydration reminders. We never send marketing emails.',
             'We do NOT sell, rent, or share your personal data with advertisers or third-party data brokers.',
           ]),
@@ -51,7 +51,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
 
           _Section('5. Third-Party Services', [
             'Supabase (supabase.com) — database and authentication. Privacy policy: supabase.com/privacy',
-            'Google Gemini API — AI chat responses. Data policy: ai.google.dev/gemini-api/terms',
+            'Groq API (groq.com) — AI chat responses and general intelligence. Privacy policy: groq.com/privacy',
             'OpenWeatherMap — weather data by city name. Privacy policy: openweathermap.org/privacy-policy',
             'Android Health Connect — on-device health data platform by Google.',
           ]),

@@ -21,17 +21,21 @@ class AppConstants {
   static const String weatherBaseUrl =
       'https://api.openweathermap.org/data/2.5';
 
-  static const String geminiApiKey = String.fromEnvironment(
-    'GEMINI_API_KEY',
+  static const String groqApiKey = String.fromEnvironment(
+    'GROQ_API_KEY',
     defaultValue: '',
   );
-  static const String geminiBaseUrl =
-      'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+  static const String groqBaseUrl =
+      'https://api.groq.com/openai/v1/chat/completions';
+  static const String groqDefaultModel = String.fromEnvironment(
+    'GROQ_MODEL',
+    defaultValue: 'openai/gpt-oss-120b',
+  );
 
   static bool get isSupabaseConfigured =>
       supabaseUrl.isNotEmpty && supabaseAnonKey.isNotEmpty;
   static bool get isWeatherConfigured => weatherApiKey.isNotEmpty;
-  static bool get isGeminiConfigured => geminiApiKey.isNotEmpty;
+  static bool get isGroqConfigured => groqApiKey.isNotEmpty;
 
   static const String keyOnboardingDone     = 'onboarding_done';
   static const String keyUserId             = 'user_id';
