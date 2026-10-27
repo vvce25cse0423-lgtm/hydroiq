@@ -1,13 +1,11 @@
 Add-Type -AssemblyName System.Drawing
 
-$srcPath = "C:\Users\Nitin\.gemini\antigravity\brain\d24b3569-91a3-4d58-8b6c-b903fd23b345\.user_uploaded\media_1792902152187_186396d2.png"
+$srcPath = "scripts\raw_assets\splash_screen_raw.png"
 if (-not (Test-Path $srcPath)) {
     Write-Error "Source image not found: $srcPath"
     exit 1
 }
 
-$rawDest = "scripts\raw_assets\splash_screen_raw.png"
-Copy-Item $srcPath -Destination $rawDest -Force
 Copy-Item $srcPath -Destination "assets\images\splash_background_raw.png" -Force
 
 $img = [System.Drawing.Bitmap]::FromFile($srcPath)

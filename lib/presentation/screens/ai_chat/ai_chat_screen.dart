@@ -317,13 +317,70 @@ class _Bubble extends StatelessWidget {
                 bottomLeft: Radius.circular(isUser ? 18 : 4),
                 bottomRight: Radius.circular(isUser ? 4 : 18)),
               boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 6, offset: const Offset(0,2))]),
-            child: Text(msg.text,
-                style: TextStyle(color: isUser ? Colors.white : null, fontSize: 14, height: 1.55)),
+            child: _buildFormattedText(
+              msg.text,
+              TextStyle(color: isUser ? Colors.white : null, fontSize: 14, height: 1.55),
+            ),
           )),
           if (isUser) const SizedBox(width: 8),
         ],
       ),
     );
+  }
+
+  Widget _buildFormattedText(String text, TextStyle baseStyle) {
+    // 1. Replace lines starting with markdown bullets "* " or "- " with "• "
+    final processed = text.replaceAll(RegExp(r'(^|\n)\s*[*]\s+', multiLine: true), r'$1• ');
+
+    // 2. Parse inline **bold**, *italic*, and `code` without showing asterisks
+    final spans = <InlineSpan>[];
+    final regex = RegExp(r'(\*\*(.*?)\*\*|\*(.*?)\*|`(.*?)`)');
+    int lastIndex = 0;
+
+    for (final match in regex.allMatches(processed)) {
+      if (match.start > lastIndex) {
+        final plain = processed.substring(lastIndex, match.start).replaceAll('*', '');
+        if (plain.isNotEmpty) {
+          spans.add(TextSpan(text: plain, style: baseStyle));
+        }
+      }
+
+      final full = match.group(0)!;
+      if (full.startsWith('**') && full.endsWith('**')) {
+        final content = (match.group(2) ?? '').replaceAll('*', '');
+        spans.add(TextSpan(
+          text: content,
+          style: baseStyle.copyWith(fontWeight: FontWeight.w700),
+        ));
+      } else if (full.startsWith('*') && full.endsWith('*')) {
+        final content = (match.group(3) ?? '').replaceAll('*', '');
+        spans.add(TextSpan(
+          text: content,
+          style: baseStyle.copyWith(fontStyle: FontStyle.italic),
+        ));
+      } else if (full.startsWith('`') && full.endsWith('`')) {
+        final content = match.group(4) ?? '';
+        spans.add(TextSpan(
+          text: content,
+          style: baseStyle.copyWith(fontFamily: 'monospace'),
+        ));
+      }
+      lastIndex = match.end;
+    }
+
+    if (lastIndex < processed.length) {
+      final plain = processed.substring(lastIndex).replaceAll('*', '');
+      if (plain.isNotEmpty) {
+        spans.add(TextSpan(text: plain, style: baseStyle));
+      }
+    }
+
+    if (spans.isEmpty) {
+      return Text(processed.replaceAll('*', ''), style: baseStyle);
+    }
+
+    return Text.rich(TextSpan(children: spans));
+  }
   }
 }
 

@@ -16,12 +16,15 @@ You can answer ANY question in the world on ANY topic:
 - Health, hydration, fitness, nutrition, and wellness
 - Creative writing, explanations, brainstorming, and daily life questions
 
-Guidelines:
+Formatting Guidelines:
+- DO NOT use asterisks or star marks (* or **) anywhere in your response.
+- Do not use **text** for bold or *text* for italics. Instead, write in clean, clear plain text or use CAPITALIZATION or emojis for emphasis.
+- For lists or bullet points, use numbered lists (1., 2., 3.) or clean bullet dots (•) or emojis (💧, 🌿, ✨), NEVER asterisk characters (*).
+- Keep formatting clean, natural, and easy to read on mobile screens without raw markdown syntax.
 - ALWAYS provide a direct, accurate, and helpful answer immediately.
 - Never refuse to answer general knowledge or diverse questions.
 - For math and calculations: calculate and present the answer clearly.
 - Maintain a warm, encouraging, and natural conversational tone with emojis where appropriate.
-- Keep answers concise, clear, and easy to read on mobile.
 ''';
 
   Future<String> sendMessage(String userMessage, List<Map<String, String>> history) async {
@@ -88,13 +91,26 @@ Guidelines:
             final firstChoice = choices.first as Map<String, dynamic>?;
             final message = firstChoice?['message'] as Map<String, dynamic>?;
             final content = message?['content'] as String? ?? '';
-            if (content.isNotEmpty) return content.trim();
+            if (content.isNotEmpty) return cleanText(content.trim());
           }
         }
       } catch (_) {}
     }
 
-    return _offlineAnswer(userMessage);
+    return cleanText(_offlineAnswer(userMessage));
+  }
+
+  /// Sanitizes text to remove unwanted raw asterisk/star marks (* and **)
+  static String cleanText(String text) {
+    // 1. Convert lines starting with markdown bullets "* " or "- " into "• "
+    var cleaned = text.replaceAll(RegExp(r'(^|\n)\s*[*]\s+', multiLine: true), r'$1• ');
+    // 2. Remove double/triple asterisks **word** -> word
+    cleaned = cleaned.replaceAll(RegExp(r'\*{2,3}(.*?)\*{2,3}'), r'$1');
+    // 3. Remove single asterisks *word* -> word
+    cleaned = cleaned.replaceAll(RegExp(r'\*([^\s*][^*]*?)\*'), r'$1');
+    // 4. Remove any remaining stray asterisks
+    cleaned = cleaned.replaceAll('*', '');
+    return cleaned.trim();
   }
 
   /// Quick local answers for simple unambiguous inputs — bypasses API
@@ -139,7 +155,7 @@ Guidelines:
         final aStr = a == a.truncateToDouble() ? a.toInt().toString() : a.toString();
         final bStr = b == b.truncateToDouble() ? b.toInt().toString() : b.toString();
         final rStr = result == result.truncateToDouble() ? result.toInt().toString() : result.toStringAsFixed(4).replaceAll(RegExp(r'0+$'), '').replaceAll(RegExp(r'\.$'), '');
-        return '🔢 $aStr $opWord $bStr = **$rStr**';
+        return '🔢 $aStr $opWord $bStr = $rStr';
       }
     }
 
@@ -149,7 +165,7 @@ Guidelines:
       final n = double.tryParse(inner);
       if (n != null && n >= 0) {
         final r = n == 0 ? 0.0 : (n < 0 ? -1.0 : _sqrt(n));
-        if (r >= 0) return '🔢 √$n = **${r == r.truncateToDouble() ? r.toInt() : r.toStringAsFixed(4)}**';
+        if (r >= 0) return '🔢 √$n = ${r == r.truncateToDouble() ? r.toInt() : r.toStringAsFixed(4)}';
       }
     }
 
@@ -174,47 +190,47 @@ Guidelines:
       final r = _evalSimpleMath(cleaned);
       if (r != null) return r;
     }
-    if (msg.contains('2+2') || msg.contains('2 + 2')) return '🔢 2 + 2 = **4**';
-    if (msg.contains('1+1') || msg.contains('1 + 1')) return '🔢 1 + 1 = **2**';
+    if (msg.contains('2+2') || msg.contains('2 + 2')) return '🔢 2 + 2 = 4';
+    if (msg.contains('1+1') || msg.contains('1 + 1')) return '🔢 1 + 1 = 2';
 
     // Science
     if (msg.contains('formula of water') || (msg.contains('chemical formula') && msg.contains('water'))) {
-      return '💧 The chemical formula of water is **H₂O** — two hydrogen atoms bonded to one oxygen atom.';
+      return '💧 The chemical formula of water is H₂O — two hydrogen atoms bonded to one oxygen atom.';
     }
-    if (msg.contains('speed of light')) return '⚡ Speed of light = **299,792,458 m/s** (~3×10⁸ m/s) in vacuum.';
-    if (msg.contains('gravity') || msg.contains('gravitational')) return '🌍 Gravitational acceleration on Earth = **9.8 m/s²** (approx. 9.81 m/s²).';
-    if (msg.contains('pi') && (msg.contains('value') || msg.contains('what is'))) return "🔢 π (pi) ≈ **3.14159265358979...**  An irrational number representing the ratio of a circle's circumference to its diameter.";
-    if (msg.contains('formula') && msg.contains('salt')) return '⚗️ Salt (table salt) = **NaCl** — sodium chloride.';
-    if (msg.contains('formula') && msg.contains('glucose')) return '⚗️ Glucose = **C₆H₁₂O₆** — a simple sugar and primary energy source for cells.';
-    if (msg.contains('formula') && msg.contains('co2')) return '⚗️ CO₂ = **Carbon dioxide** — one carbon atom bonded to two oxygen atoms.';
-    if (msg.contains('boiling point') && msg.contains('water')) return '🌡️ Water boils at **100°C (212°F)** at sea level (1 atm pressure).';
-    if (msg.contains('freezing point') && msg.contains('water')) return '🧊 Water freezes at **0°C (32°F)** at standard pressure.';
+    if (msg.contains('speed of light')) return '⚡ Speed of light = 299,792,458 m/s (~3×10⁸ m/s) in vacuum.';
+    if (msg.contains('gravity') || msg.contains('gravitational')) return '🌍 Gravitational acceleration on Earth = 9.8 m/s² (approx. 9.81 m/s²).';
+    if (msg.contains('pi') && (msg.contains('value') || msg.contains('what is'))) return "🔢 π (pi) ≈ 3.14159265358979... An irrational number representing the ratio of a circle's circumference to its diameter.";
+    if (msg.contains('formula') && msg.contains('salt')) return '⚗️ Salt (table salt) = NaCl — sodium chloride.';
+    if (msg.contains('formula') && msg.contains('glucose')) return '⚗️ Glucose = C₆H₁₂O₆ — a simple sugar and primary energy source for cells.';
+    if (msg.contains('formula') && msg.contains('co2')) return '⚗️ CO₂ = Carbon dioxide — one carbon atom bonded to two oxygen atoms.';
+    if (msg.contains('boiling point') && msg.contains('water')) return '🌡️ Water boils at 100°C (212°F) at sea level (1 atm pressure).';
+    if (msg.contains('freezing point') && msg.contains('water')) return '🧊 Water freezes at 0°C (32°F) at standard pressure.';
 
     // Geography
-    if (msg.contains('capital') && msg.contains('india')) return '🇮🇳 Capital of India: **New Delhi**.';
-    if (msg.contains('capital') && msg.contains('france')) return '🇫🇷 Capital of France: **Paris**.';
-    if (msg.contains('capital') && msg.contains('usa') || msg.contains('capital') && msg.contains('america') || msg.contains('capital') && msg.contains('united states')) return '🇺🇸 Capital of the USA: **Washington, D.C.**';
-    if (msg.contains('capital') && msg.contains('uk') || msg.contains('capital') && msg.contains('britain')) return '🇬🇧 Capital of the UK: **London**.';
-    if (msg.contains('capital') && msg.contains('japan')) return '🇯🇵 Capital of Japan: **Tokyo**.';
-    if (msg.contains('capital') && msg.contains('china')) return '🇨🇳 Capital of China: **Beijing**.';
-    if (msg.contains('capital') && msg.contains('australia')) return '🇦🇺 Capital of Australia: **Canberra**.';
-    if (msg.contains('capital') && msg.contains('germany')) return '🇩🇪 Capital of Germany: **Berlin**.';
-    if (msg.contains('capital') && msg.contains('canada')) return '🇨🇦 Capital of Canada: **Ottawa**.';
-    if (msg.contains('largest country')) return '🌍 The **largest country** by area is **Russia** (17.1 million km²).';
-    if (msg.contains('smallest country')) return '🌍 The **smallest country** is **Vatican City** (0.44 km²).';
-    if (msg.contains('longest river')) return "🏞️ The **Nile** is traditionally considered the world's longest river (~6,650 km), though some measurements put the **Amazon** slightly longer.";
-    if (msg.contains('tallest mountain') || msg.contains('highest mountain')) return "🏔️ **Mount Everest** is Earth's highest mountain at **8,848.86 m** (29,031.7 ft) above sea level.";
-    if (msg.contains('largest ocean')) return '🌊 The **Pacific Ocean** is the largest ocean, covering ~165 million km².';
-    if (msg.contains('population') && msg.contains('india')) return "🇮🇳 India's population: ~**1.44 billion** (2024) — the world's most populous country.";
-    if (msg.contains('population') && (msg.contains('world') || msg.contains('earth'))) return '🌍 World population: ~**8.1 billion** people (2024).';
+    if (msg.contains('capital') && msg.contains('india')) return '🇮🇳 Capital of India: New Delhi.';
+    if (msg.contains('capital') && msg.contains('france')) return '🇫🇷 Capital of France: Paris.';
+    if (msg.contains('capital') && msg.contains('usa') || msg.contains('capital') && msg.contains('america') || msg.contains('capital') && msg.contains('united states')) return '🇺🇸 Capital of the USA: Washington, D.C.';
+    if (msg.contains('capital') && msg.contains('uk') || msg.contains('capital') && msg.contains('britain')) return '🇬🇧 Capital of the UK: London.';
+    if (msg.contains('capital') && msg.contains('japan')) return '🇯🇵 Capital of Japan: Tokyo.';
+    if (msg.contains('capital') && msg.contains('china')) return '🇨🇳 Capital of China: Beijing.';
+    if (msg.contains('capital') && msg.contains('australia')) return '🇦🇺 Capital of Australia: Canberra.';
+    if (msg.contains('capital') && msg.contains('germany')) return '🇩🇪 Capital of Germany: Berlin.';
+    if (msg.contains('capital') && msg.contains('canada')) return '🇨🇦 Capital of Canada: Ottawa.';
+    if (msg.contains('largest country')) return '🌍 The largest country by area is Russia (17.1 million km²).';
+    if (msg.contains('smallest country')) return '🌍 The smallest country is Vatican City (0.44 km²).';
+    if (msg.contains('longest river')) return "🏞️ The Nile is traditionally considered the world's longest river (~6,650 km), though some measurements put the Amazon slightly longer.";
+    if (msg.contains('tallest mountain') || msg.contains('highest mountain')) return "🏔️ Mount Everest is Earth's highest mountain at 8,848.86 m (29,031.7 ft) above sea level.";
+    if (msg.contains('largest ocean')) return '🌊 The Pacific Ocean is the largest ocean, covering ~165 million km².';
+    if (msg.contains('population') && msg.contains('india')) return "🇮🇳 India's population: ~1.44 billion (2024) — the world's most populous country.";
+    if (msg.contains('population') && (msg.contains('world') || msg.contains('earth'))) return '🌍 World population: ~8.1 billion people (2024).';
 
     // History
-    if (msg.contains('independence') && msg.contains('india')) return '🇮🇳 India gained independence on **August 15, 1947** from British rule.';
-    if (msg.contains('world war 1') || msg.contains('world war i') || msg.contains('ww1')) return '⚔️ World War I lasted **1914–1918**, fought mainly in Europe. It resulted in ~20 million deaths.';
-    if (msg.contains('world war 2') || msg.contains('world war ii') || msg.contains('ww2')) return '⚔️ World War II lasted **1939–1945**, the deadliest conflict in history (~70–85 million casualties).';
+    if (msg.contains('independence') && msg.contains('india')) return '🇮🇳 India gained independence on August 15, 1947 from British rule.';
+    if (msg.contains('world war 1') || msg.contains('world war i') || msg.contains('ww1')) return '⚔️ World War I lasted 1914–1918, fought mainly in Europe. It resulted in ~20 million deaths.';
+    if (msg.contains('world war 2') || msg.contains('world war ii') || msg.contains('ww2')) return '⚔️ World War II lasted 1939–1945, the deadliest conflict in history (~70–85 million casualties).';
 
     // Health & hydration
-    if (msg.contains('how much') && msg.contains('water')) return "💧 Recommended: **35ml per kg of body weight** per day. For a 70kg person, that's ~2.45L. More if exercising or in hot weather.";
+    if (msg.contains('how much') && msg.contains('water')) return "💧 Recommended: 35ml per kg of body weight per day. For a 70kg person, that's ~2.45L. More if exercising or in hot weather.";
     if (msg.contains('dehydrat')) return '⚠️ Dehydration signs: dark yellow urine, dry mouth, headache, fatigue, dizziness. Fix: drink water immediately. Severe dehydration needs medical attention.';
     if (msg.contains('sleep') && msg.contains('water')) return '💧😴 Drink a glass of water before bed and immediately on waking. You lose ~1L of water overnight through breathing.';
     if (msg.contains('coffee') || msg.contains('caffeine')) return "☕ Coffee has a mild diuretic effect but moderate amounts (1-3 cups/day) won't significantly dehydrate you. Match each coffee with a glass of water.";

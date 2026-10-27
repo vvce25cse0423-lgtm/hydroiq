@@ -304,7 +304,10 @@ class _SummaryCard extends StatelessWidget {
               child: const Text('Retry', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700))),
           ])
         else if (content != null)
-          Text(content!, style: const TextStyle(color: Colors.white, fontSize: 14, height: 1.6))
+          Text(
+            content!.replaceAll(RegExp(r'(^|\n)\s*[*]\s+', multiLine: true), r'$1• ').replaceAll('*', ''),
+            style: const TextStyle(color: Colors.white, fontSize: 14, height: 1.6),
+          )
         else
           const Center(child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)),
       ]),
