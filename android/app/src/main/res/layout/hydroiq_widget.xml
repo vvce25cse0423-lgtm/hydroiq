@@ -39,7 +39,8 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:singleLine="true"
+                    android:ellipsize="end"
+                    android:maxLines="1"
                     android:text="HydroIQ"
                     android:textColor="#FFFFFF"
                     android:textSize="14sp"
@@ -48,15 +49,16 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:singleLine="true"
+                    android:ellipsize="end"
+                    android:maxLines="1"
                     android:text="Hydrate • Move • Sleep"
                     android:textColor="#80D8FF"
-                    android:textSize="8.5sp" />
+                    android:textSize="9sp" />
             </LinearLayout>
         </LinearLayout>
 
         <!-- Flexible Spacer -->
-        <FrameLayout
+        <LinearLayout
             android:layout_width="0dp"
             android:layout_height="1dp"
             android:layout_weight="1" />
@@ -93,7 +95,7 @@
                     android:id="@+id/widget_weather_temp"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:singleLine="true"
+                    android:maxLines="1"
                     android:text="28°C"
                     android:textColor="#FFFFFF"
                     android:textSize="11sp"
@@ -104,7 +106,8 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:ellipsize="end"
-                    android:singleLine="true"
+                    android:maxLines="1"
+                    android:maxWidth="110dp"
                     android:text="Partly Cloudy"
                     android:textColor="#90CAF9"
                     android:textSize="8sp" />
@@ -142,7 +145,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:singleLine="true"
+                    android:maxLines="1"
                     android:text="Daily Limit"
                     android:textColor="#80CBC4"
                     android:textSize="8sp" />
@@ -151,7 +154,7 @@
                     android:id="@+id/widget_limit_val"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:singleLine="true"
+                    android:maxLines="1"
                     android:text="5,000 ml"
                     android:textColor="#00E5FF"
                     android:textSize="11sp"
@@ -190,7 +193,7 @@
                 android:id="@+id/widget_percentage"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:singleLine="true"
+                android:maxLines="1"
                 android:text="0%"
                 android:textColor="#FFFFFF"
                 android:textSize="15sp"
@@ -200,7 +203,7 @@
                 android:id="@+id/widget_current_ml"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:singleLine="true"
+                android:maxLines="1"
                 android:text="0 ml"
                 android:textColor="#00E5FF"
                 android:textSize="10sp"
@@ -210,10 +213,11 @@
                 android:id="@+id/widget_goal_ml"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:singleLine="true"
+                android:ellipsize="end"
+                android:maxLines="1"
                 android:text="of 5,000 ml"
                 android:textColor="#80D8FF"
-                android:textSize="7.5sp" />
+                android:textSize="8sp" />
         </LinearLayout>
 
         <!-- Middle Column: Encouragement Banner + Quick Add 4 Buttons + Voice Bar -->
@@ -247,7 +251,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="4dp"
                     android:ellipsize="end"
-                    android:singleLine="true"
+                    android:maxLines="1"
                     android:text="Keep Going! You're doing great ✨"
                     android:textColor="#E0F7FA"
                     android:textSize="9sp"
@@ -266,10 +270,10 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:singleLine="true"
+                    android:maxLines="1"
                     android:text="⚡ Quick Add"
                     android:textColor="#80D8FF"
-                    android:textSize="8.5sp"
+                    android:textSize="9sp"
                     android:textStyle="bold" />
 
                 <LinearLayout
@@ -291,7 +295,7 @@
                         android:gravity="center"
                         android:text="100 ml"
                         android:textColor="#B2EBF2"
-                        android:textSize="9.5sp"
+                        android:textSize="10sp"
                         android:textStyle="bold" />
 
                     <!-- 250 ml (Highlighted Cyan Glow) -->
@@ -307,7 +311,7 @@
                         android:gravity="center"
                         android:text="250 ml"
                         android:textColor="#00E5FF"
-                        android:textSize="9.5sp"
+                        android:textSize="10sp"
                         android:textStyle="bold" />
 
                     <!-- 500 ml -->
@@ -323,7 +327,7 @@
                         android:gravity="center"
                         android:text="500 ml"
                         android:textColor="#B2EBF2"
-                        android:textSize="9.5sp"
+                        android:textSize="10sp"
                         android:textStyle="bold" />
 
                     <!-- 1 L -->
@@ -339,7 +343,7 @@
                         android:gravity="center"
                         android:text="1 L"
                         android:textColor="#B2EBF2"
-                        android:textSize="9.5sp"
+                        android:textSize="10sp"
                         android:textStyle="bold" />
                 </LinearLayout>
             </LinearLayout>
@@ -370,8 +374,8 @@
                     android:layout_marginStart="4dp"
                     android:layout_weight="1"
                     android:ellipsize="end"
-                    android:singleLine="true"
-                    android:text="Tap or Speak &quot;I drank 2 glasses of water&quot;"
+                    android:maxLines="1"
+                    android:text="Tap or Speak: I drank 2 glasses of water"
                     android:textColor="#80D8FF"
                     android:textSize="8sp" />
 
@@ -425,10 +429,10 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:ellipsize="end"
-                        android:singleLine="true"
+                        android:maxLines="1"
                         android:text="0 steps"
                         android:textColor="#FFFFFF"
-                        android:textSize="9.5sp"
+                        android:textSize="10sp"
                         android:textStyle="bold" />
 
                     <TextView
@@ -436,7 +440,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:ellipsize="end"
-                        android:singleLine="true"
+                        android:maxLines="1"
                         android:text="0 kcal • 0 km"
                         android:textColor="#80CBC4"
                         android:textSize="7sp" />
@@ -482,17 +486,18 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:ellipsize="end"
-                        android:singleLine="true"
+                        android:maxLines="1"
                         android:text="Sleep: -- hrs"
                         android:textColor="#FFFFFF"
-                        android:textSize="9.5sp"
+                        android:textSize="10sp"
                         android:textStyle="bold" />
 
                     <TextView
                         android:id="@+id/widget_sleep_quality"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:singleLine="true"
+                        android:ellipsize="end"
+                        android:maxLines="1"
                         android:text="Good Rest"
                         android:textColor="#CE93D8"
                         android:textSize="7sp" />
@@ -534,18 +539,21 @@
                     android:orientation="vertical">
 
                     <TextView
+                        android:id="@+id/card_ai_title"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:singleLine="true"
+                        android:ellipsize="end"
+                        android:maxLines="1"
                         android:text="AI Assistant"
                         android:textColor="#FFFFFF"
-                        android:textSize="9.5sp"
+                        android:textSize="10sp"
                         android:textStyle="bold" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:singleLine="true"
+                        android:ellipsize="end"
+                        android:maxLines="1"
                         android:text="Ask anything…"
                         android:textColor="#80D8FF"
                         android:textSize="7sp" />
@@ -591,10 +599,11 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="2dp"
-                android:singleLine="true"
+                android:ellipsize="end"
+                android:maxLines="1"
                 android:text="Hydrate"
                 android:textColor="#FFFFFF"
-                android:textSize="8.5sp"
+                android:textSize="9sp"
                 android:textStyle="bold" />
         </LinearLayout>
 
@@ -621,10 +630,11 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="2dp"
-                android:singleLine="true"
+                android:ellipsize="end"
+                android:maxLines="1"
                 android:text="Steps"
                 android:textColor="#FFFFFF"
-                android:textSize="8.5sp"
+                android:textSize="9sp"
                 android:textStyle="bold" />
         </LinearLayout>
 
@@ -651,10 +661,11 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="2dp"
-                android:singleLine="true"
+                android:ellipsize="end"
+                android:maxLines="1"
                 android:text="Sleep"
                 android:textColor="#FFFFFF"
-                android:textSize="8.5sp"
+                android:textSize="9sp"
                 android:textStyle="bold" />
         </LinearLayout>
 
@@ -681,10 +692,11 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="2dp"
-                android:singleLine="true"
+                android:ellipsize="end"
+                android:maxLines="1"
                 android:text="Stats"
                 android:textColor="#FFFFFF"
-                android:textSize="8.5sp"
+                android:textSize="9sp"
                 android:textStyle="bold" />
         </LinearLayout>
 
@@ -711,10 +723,11 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="2dp"
-                android:singleLine="true"
+                android:ellipsize="end"
+                android:maxLines="1"
                 android:text="Badges"
                 android:textColor="#FFFFFF"
-                android:textSize="8.5sp"
+                android:textSize="9sp"
                 android:textStyle="bold" />
         </LinearLayout>
 
@@ -741,10 +754,11 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="2dp"
-                android:singleLine="true"
+                android:ellipsize="end"
+                android:maxLines="1"
                 android:text="Settings"
                 android:textColor="#FFFFFF"
-                android:textSize="8.5sp"
+                android:textSize="9sp"
                 android:textStyle="bold" />
         </LinearLayout>
     </LinearLayout>
@@ -778,20 +792,21 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:singleLine="true"
+                android:ellipsize="end"
+                android:maxLines="1"
                 android:text="Quick Actions"
                 android:textColor="#FFFFFF"
-                android:textSize="8.5sp"
+                android:textSize="9sp"
                 android:textStyle="bold" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:ellipsize="end"
-                android:singleLine="true"
+                android:maxLines="1"
                 android:text="Add water even when the app is closed"
                 android:textColor="#90CAF9"
-                android:textSize="7.5sp" />
+                android:textSize="8sp" />
         </LinearLayout>
 
         <!-- +250ml Action Pill -->
