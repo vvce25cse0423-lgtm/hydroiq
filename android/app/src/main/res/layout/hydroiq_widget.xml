@@ -5,78 +5,83 @@
     android:layout_height="match_parent"
     android:background="@drawable/widget_bg"
     android:orientation="vertical"
-    android:padding="12dp">
+    android:padding="8dp">
 
-    <!-- 1. TOP BAR: Branding + Weather + Daily Limit -->
+    <!-- 1. TOP BAR: Branding (Left) + Weather (Center) + Daily Limit (Right) -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center_vertical"
         android:orientation="horizontal">
 
-        <!-- Logo & Title -->
+        <!-- Logo & Title Area -->
         <LinearLayout
             android:id="@+id/widget_header_area"
-            android:layout_width="0dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="1.2"
             android:clickable="true"
             android:focusable="true"
             android:gravity="center_vertical"
             android:orientation="horizontal">
 
             <ImageView
-                android:layout_width="32dp"
-                android:layout_height="32dp"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
                 android:contentDescription="@string/app_name"
                 android:src="@mipmap/ic_launcher" />
 
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
+                android:layout_marginStart="6dp"
                 android:orientation="vertical">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:singleLine="true"
                     android:text="HydroIQ"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="14sp"
                     android:textStyle="bold" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:ellipsize="end"
-                    android:maxLines="1"
-                    android:text="Hydrate • Move • Sleep • Be Better"
+                    android:singleLine="true"
+                    android:text="Hydrate • Move • Sleep"
                     android:textColor="#80D8FF"
-                    android:textSize="10sp" />
+                    android:textSize="8.5sp" />
             </LinearLayout>
         </LinearLayout>
+
+        <!-- Flexible Spacer -->
+        <FrameLayout
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_weight="1" />
 
         <!-- Weather Card -->
         <LinearLayout
             android:id="@+id/widget_weather_card"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="6dp"
+            android:layout_marginStart="4dp"
             android:background="@drawable/widget_card_glass"
             android:clickable="true"
             android:focusable="true"
             android:gravity="center_vertical"
             android:orientation="horizontal"
-            android:paddingStart="8dp"
-            android:paddingTop="4dp"
-            android:paddingEnd="8dp"
-            android:paddingBottom="4dp">
+            android:paddingStart="7dp"
+            android:paddingTop="3dp"
+            android:paddingEnd="7dp"
+            android:paddingBottom="3dp">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="🌤️"
-                android:textSize="14sp" />
+                android:textSize="12sp" />
 
             <LinearLayout
                 android:layout_width="wrap_content"
@@ -88,9 +93,10 @@
                     android:id="@+id/widget_weather_temp"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:singleLine="true"
                     android:text="28°C"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="11sp"
                     android:textStyle="bold" />
 
                 <TextView
@@ -98,10 +104,10 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:ellipsize="end"
-                    android:maxLines="1"
+                    android:singleLine="true"
                     android:text="Partly Cloudy"
                     android:textColor="#90CAF9"
-                    android:textSize="9sp" />
+                    android:textSize="8sp" />
             </LinearLayout>
         </LinearLayout>
 
@@ -110,22 +116,22 @@
             android:id="@+id/widget_limit_card"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="6dp"
+            android:layout_marginStart="5dp"
             android:background="@drawable/widget_card_glass"
             android:clickable="true"
             android:focusable="true"
             android:gravity="center_vertical"
             android:orientation="horizontal"
-            android:paddingStart="8dp"
-            android:paddingTop="4dp"
-            android:paddingEnd="8dp"
-            android:paddingBottom="4dp">
+            android:paddingStart="7dp"
+            android:paddingTop="3dp"
+            android:paddingEnd="7dp"
+            android:paddingBottom="3dp">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="🛡️"
-                android:textSize="14sp" />
+                android:textSize="12sp" />
 
             <LinearLayout
                 android:layout_width="wrap_content"
@@ -136,137 +142,140 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:singleLine="true"
                     android:text="Daily Limit"
                     android:textColor="#80CBC4"
-                    android:textSize="9sp" />
+                    android:textSize="8sp" />
 
                 <TextView
                     android:id="@+id/widget_limit_val"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:singleLine="true"
                     android:text="5,000 ml"
                     android:textColor="#00E5FF"
-                    android:textSize="12sp"
+                    android:textSize="11sp"
                     android:textStyle="bold" />
             </LinearLayout>
         </LinearLayout>
     </LinearLayout>
 
-    <!-- 2. MAIN ROW: Progress Gauge + Middle Controls + Right Health Cards -->
+    <!-- 2. MAIN SECTION: Circular Gauge + Quick Add Controls + Health Cards -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_marginTop="8dp"
-        android:layout_weight="1"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
         android:gravity="center_vertical"
         android:orientation="horizontal">
 
         <!-- Left: Circular Hydration Progress Gauge -->
         <LinearLayout
             android:id="@+id/widget_gauge_area"
-            android:layout_width="92dp"
-            android:layout_height="92dp"
+            android:layout_width="78dp"
+            android:layout_height="78dp"
             android:background="@drawable/widget_circle_gauge"
             android:clickable="true"
             android:focusable="true"
             android:gravity="center"
             android:orientation="vertical"
-            android:padding="6dp">
+            android:padding="4dp">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="💧"
-                android:textSize="13sp" />
+                android:textSize="11sp" />
 
             <TextView
                 android:id="@+id/widget_percentage"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:singleLine="true"
                 android:text="0%"
                 android:textColor="#FFFFFF"
-                android:textSize="17sp"
+                android:textSize="15sp"
                 android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/widget_current_ml"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:singleLine="true"
                 android:text="0 ml"
                 android:textColor="#00E5FF"
-                android:textSize="11sp"
+                android:textSize="10sp"
                 android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/widget_goal_ml"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:singleLine="true"
                 android:text="of 5,000 ml"
                 android:textColor="#80D8FF"
-                android:textSize="8sp" />
+                android:textSize="7.5sp" />
         </LinearLayout>
 
-        <!-- Middle Column: Encouragement + Quick Add + Voice Input -->
+        <!-- Middle Column: Encouragement Banner + Quick Add 4 Buttons + Voice Bar -->
         <LinearLayout
             android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_marginStart="8dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="6dp"
             android:layout_weight="1.3"
             android:gravity="center_vertical"
             android:orientation="vertical">
 
-            <!-- Encouragement Card -->
+            <!-- Encouragement Banner -->
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="20dp"
                 android:background="@drawable/widget_card_glass"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
-                android:paddingStart="8dp"
-                android:paddingTop="3dp"
-                android:paddingEnd="8dp"
-                android:paddingBottom="3dp">
+                android:paddingStart="6dp"
+                android:paddingEnd="6dp">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="💧"
-                    android:textSize="11sp" />
+                    android:textSize="10sp" />
 
                 <TextView
                     android:id="@+id/widget_status"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="6dp"
+                    android:layout_marginStart="4dp"
                     android:ellipsize="end"
-                    android:maxLines="1"
+                    android:singleLine="true"
                     android:text="Keep Going! You're doing great ✨"
                     android:textColor="#E0F7FA"
-                    android:textSize="10sp"
+                    android:textSize="9sp"
                     android:textStyle="bold" />
             </LinearLayout>
 
-            <!-- Quick Add Card with 4 buttons: 100ml, 250ml, 500ml, 1L -->
+            <!-- Quick Add Bar with 4 Buttons: 100ml, 250ml, 500ml, 1L -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="5dp"
+                android:layout_marginTop="4dp"
                 android:background="@drawable/widget_card_glass"
                 android:orientation="vertical"
-                android:padding="6dp">
+                android:padding="4dp">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:singleLine="true"
                     android:text="⚡ Quick Add"
                     android:textColor="#80D8FF"
-                    android:textSize="9sp"
+                    android:textSize="8.5sp"
                     android:textStyle="bold" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
+                    android:layout_marginTop="3dp"
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
 
@@ -274,7 +283,7 @@
                     <TextView
                         android:id="@+id/btn_add_100"
                         android:layout_width="0dp"
-                        android:layout_height="26dp"
+                        android:layout_height="24dp"
                         android:layout_weight="1"
                         android:background="@drawable/widget_card_glass"
                         android:clickable="true"
@@ -282,31 +291,31 @@
                         android:gravity="center"
                         android:text="100 ml"
                         android:textColor="#B2EBF2"
-                        android:textSize="10sp"
+                        android:textSize="9.5sp"
                         android:textStyle="bold" />
 
-                    <!-- 250 ml (Active Cyan Highlight) -->
+                    <!-- 250 ml (Highlighted Cyan Glow) -->
                     <TextView
                         android:id="@+id/btn_add_250"
                         android:layout_width="0dp"
-                        android:layout_height="26dp"
-                        android:layout_marginStart="4dp"
-                        android:layout_weight="1.1"
+                        android:layout_height="24dp"
+                        android:layout_marginStart="3dp"
+                        android:layout_weight="1.15"
                         android:background="@drawable/widget_card_cyan_glow"
                         android:clickable="true"
                         android:focusable="true"
                         android:gravity="center"
                         android:text="250 ml"
                         android:textColor="#00E5FF"
-                        android:textSize="10sp"
+                        android:textSize="9.5sp"
                         android:textStyle="bold" />
 
                     <!-- 500 ml -->
                     <TextView
                         android:id="@+id/btn_add_500"
                         android:layout_width="0dp"
-                        android:layout_height="26dp"
-                        android:layout_marginStart="4dp"
+                        android:layout_height="24dp"
+                        android:layout_marginStart="3dp"
                         android:layout_weight="1"
                         android:background="@drawable/widget_card_glass"
                         android:clickable="true"
@@ -314,15 +323,15 @@
                         android:gravity="center"
                         android:text="500 ml"
                         android:textColor="#B2EBF2"
-                        android:textSize="10sp"
+                        android:textSize="9.5sp"
                         android:textStyle="bold" />
 
                     <!-- 1 L -->
                     <TextView
                         android:id="@+id/btn_add_1000"
                         android:layout_width="0dp"
-                        android:layout_height="26dp"
-                        android:layout_marginStart="4dp"
+                        android:layout_height="24dp"
+                        android:layout_marginStart="3dp"
                         android:layout_weight="1"
                         android:background="@drawable/widget_card_glass"
                         android:clickable="true"
@@ -330,7 +339,7 @@
                         android:gravity="center"
                         android:text="1 L"
                         android:textColor="#B2EBF2"
-                        android:textSize="10sp"
+                        android:textSize="9.5sp"
                         android:textStyle="bold" />
                 </LinearLayout>
             </LinearLayout>
@@ -339,50 +348,48 @@
             <LinearLayout
                 android:id="@+id/btn_voice_input"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="5dp"
+                android:layout_height="20dp"
+                android:layout_marginTop="4dp"
                 android:background="@drawable/widget_card_glass"
                 android:clickable="true"
                 android:focusable="true"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
-                android:paddingStart="8dp"
-                android:paddingTop="3dp"
-                android:paddingEnd="8dp"
-                android:paddingBottom="3dp">
+                android:paddingStart="6dp"
+                android:paddingEnd="6dp">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="🎙️"
-                    android:textSize="11sp" />
+                    android:textSize="10sp" />
 
                 <TextView
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="5dp"
+                    android:layout_marginStart="4dp"
                     android:layout_weight="1"
                     android:ellipsize="end"
-                    android:maxLines="1"
+                    android:singleLine="true"
                     android:text="Tap or Speak &quot;I drank 2 glasses of water&quot;"
                     android:textColor="#80D8FF"
-                    android:textSize="9sp" />
+                    android:textSize="8sp" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="›"
                     android:textColor="#00E5FF"
-                    android:textSize="12sp"
+                    android:textSize="11sp"
                     android:textStyle="bold" />
             </LinearLayout>
         </LinearLayout>
 
-        <!-- Right Column: Steps, Sleep, AI Assistant, Today's Progress -->
+        <!-- Right Column: Steps, Sleep, AI Assistant -->
         <LinearLayout
             android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_marginStart="8dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="6dp"
             android:layout_weight="1"
             android:gravity="center_vertical"
             android:orientation="vertical">
@@ -391,22 +398,20 @@
             <LinearLayout
                 android:id="@+id/card_steps"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="24dp"
                 android:background="@drawable/widget_card_glass"
                 android:clickable="true"
                 android:focusable="true"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
-                android:paddingStart="6dp"
-                android:paddingTop="2dp"
-                android:paddingEnd="6dp"
-                android:paddingBottom="2dp">
+                android:paddingStart="5dp"
+                android:paddingEnd="5dp">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="👟"
-                    android:textSize="11sp" />
+                    android:textSize="10sp" />
 
                 <LinearLayout
                     android:layout_width="0dp"
@@ -420,10 +425,10 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:ellipsize="end"
-                        android:maxLines="1"
+                        android:singleLine="true"
                         android:text="0 steps"
                         android:textColor="#FFFFFF"
-                        android:textSize="10sp"
+                        android:textSize="9.5sp"
                         android:textStyle="bold" />
 
                     <TextView
@@ -431,10 +436,10 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:ellipsize="end"
-                        android:maxLines="1"
+                        android:singleLine="true"
                         android:text="0 kcal • 0 km"
                         android:textColor="#80CBC4"
-                        android:textSize="8sp" />
+                        android:textSize="7sp" />
                 </LinearLayout>
 
                 <TextView
@@ -442,30 +447,28 @@
                     android:layout_height="wrap_content"
                     android:text="›"
                     android:textColor="#80D8FF"
-                    android:textSize="11sp" />
+                    android:textSize="10sp" />
             </LinearLayout>
 
             <!-- Sleep Card -->
             <LinearLayout
                 android:id="@+id/card_sleep"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="24dp"
                 android:layout_marginTop="3dp"
                 android:background="@drawable/widget_card_glass"
                 android:clickable="true"
                 android:focusable="true"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
-                android:paddingStart="6dp"
-                android:paddingTop="2dp"
-                android:paddingEnd="6dp"
-                android:paddingBottom="2dp">
+                android:paddingStart="5dp"
+                android:paddingEnd="5dp">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="🌙"
-                    android:textSize="11sp" />
+                    android:textSize="10sp" />
 
                 <LinearLayout
                     android:layout_width="0dp"
@@ -479,19 +482,20 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:ellipsize="end"
-                        android:maxLines="1"
+                        android:singleLine="true"
                         android:text="Sleep: -- hrs"
                         android:textColor="#FFFFFF"
-                        android:textSize="10sp"
+                        android:textSize="9.5sp"
                         android:textStyle="bold" />
 
                     <TextView
                         android:id="@+id/widget_sleep_quality"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:singleLine="true"
                         android:text="Good Rest"
                         android:textColor="#CE93D8"
-                        android:textSize="8sp" />
+                        android:textSize="7sp" />
                 </LinearLayout>
 
                 <TextView
@@ -499,30 +503,28 @@
                     android:layout_height="wrap_content"
                     android:text="›"
                     android:textColor="#80D8FF"
-                    android:textSize="11sp" />
+                    android:textSize="10sp" />
             </LinearLayout>
 
             <!-- AI Assistant Card -->
             <LinearLayout
                 android:id="@+id/card_ai"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="24dp"
                 android:layout_marginTop="3dp"
                 android:background="@drawable/widget_card_glass"
                 android:clickable="true"
                 android:focusable="true"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
-                android:paddingStart="6dp"
-                android:paddingTop="2dp"
-                android:paddingEnd="6dp"
-                android:paddingBottom="2dp">
+                android:paddingStart="5dp"
+                android:paddingEnd="5dp">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="🤖"
-                    android:textSize="11sp" />
+                    android:textSize="10sp" />
 
                 <LinearLayout
                     android:layout_width="0dp"
@@ -534,17 +536,19 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:singleLine="true"
                         android:text="AI Assistant"
                         android:textColor="#FFFFFF"
-                        android:textSize="10sp"
+                        android:textSize="9.5sp"
                         android:textStyle="bold" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:singleLine="true"
                         android:text="Ask anything…"
                         android:textColor="#80D8FF"
-                        android:textSize="8sp" />
+                        android:textSize="7sp" />
                 </LinearLayout>
 
                 <TextView
@@ -552,58 +556,7 @@
                     android:layout_height="wrap_content"
                     android:text="›"
                     android:textColor="#80D8FF"
-                    android:textSize="11sp" />
-            </LinearLayout>
-
-            <!-- Today's Progress Card -->
-            <LinearLayout
-                android:id="@+id/card_progress"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="3dp"
-                android:background="@drawable/widget_card_glass"
-                android:clickable="true"
-                android:focusable="true"
-                android:gravity="center_vertical"
-                android:orientation="vertical"
-                android:paddingStart="6dp"
-                android:paddingTop="2dp"
-                android:paddingEnd="6dp"
-                android:paddingBottom="2dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="Today's Progress"
-                        android:textColor="#E0F7FA"
-                        android:textSize="9sp" />
-
-                    <TextView
-                        android:id="@+id/widget_progress_text"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="0%"
-                        android:textColor="#00E5FF"
-                        android:textSize="9sp"
-                        android:textStyle="bold" />
-                </LinearLayout>
-
-                <ProgressBar
-                    android:id="@+id/widget_progress_bar"
-                    style="?android:attr/progressBarStyleHorizontal"
-                    android:layout_width="match_parent"
-                    android:layout_height="4dp"
-                    android:layout_marginTop="2dp"
-                    android:max="100"
-                    android:progress="0"
-                    android:progressDrawable="@drawable/widget_progress_bar" />
+                    android:textSize="10sp" />
             </LinearLayout>
         </LinearLayout>
     </LinearLayout>
@@ -612,7 +565,7 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="7dp"
+        android:layout_marginTop="6dp"
         android:gravity="center_vertical"
         android:orientation="horizontal">
 
@@ -620,173 +573,179 @@
         <LinearLayout
             android:id="@+id/nav_hydration"
             android:layout_width="0dp"
-            android:layout_height="36dp"
+            android:layout_height="28dp"
             android:layout_weight="1"
             android:background="@drawable/widget_nav_hydration"
             android:clickable="true"
             android:focusable="true"
             android:gravity="center"
-            android:orientation="vertical">
+            android:orientation="horizontal">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="💧 Hydration ›"
+                android:text="💧"
+                android:textSize="10sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="2dp"
+                android:singleLine="true"
+                android:text="Hydrate"
                 android:textColor="#FFFFFF"
-                android:textSize="9sp"
+                android:textSize="8.5sp"
                 android:textStyle="bold" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Drink Water"
-                android:textColor="#E3F2FD"
-                android:textSize="7.5sp" />
         </LinearLayout>
 
         <!-- Steps -->
         <LinearLayout
             android:id="@+id/nav_steps"
             android:layout_width="0dp"
-            android:layout_height="36dp"
-            android:layout_marginStart="4dp"
+            android:layout_height="28dp"
+            android:layout_marginStart="3dp"
             android:layout_weight="1"
             android:background="@drawable/widget_nav_steps"
             android:clickable="true"
             android:focusable="true"
             android:gravity="center"
-            android:orientation="vertical">
+            android:orientation="horizontal">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="👟 Steps ›"
+                android:text="👟"
+                android:textSize="10sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="2dp"
+                android:singleLine="true"
+                android:text="Steps"
                 android:textColor="#FFFFFF"
-                android:textSize="9sp"
+                android:textSize="8.5sp"
                 android:textStyle="bold" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Stay Active"
-                android:textColor="#E0F2F1"
-                android:textSize="7.5sp" />
         </LinearLayout>
 
         <!-- Sleep -->
         <LinearLayout
             android:id="@+id/nav_sleep"
             android:layout_width="0dp"
-            android:layout_height="36dp"
-            android:layout_marginStart="4dp"
+            android:layout_height="28dp"
+            android:layout_marginStart="3dp"
             android:layout_weight="1"
             android:background="@drawable/widget_nav_sleep"
             android:clickable="true"
             android:focusable="true"
             android:gravity="center"
-            android:orientation="vertical">
+            android:orientation="horizontal">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="🌙 Sleep ›"
+                android:text="🌙"
+                android:textSize="10sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="2dp"
+                android:singleLine="true"
+                android:text="Sleep"
                 android:textColor="#FFFFFF"
-                android:textSize="9sp"
+                android:textSize="8.5sp"
                 android:textStyle="bold" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Better Rest"
-                android:textColor="#EDE7F6"
-                android:textSize="7.5sp" />
         </LinearLayout>
 
         <!-- Stats -->
         <LinearLayout
             android:id="@+id/nav_stats"
             android:layout_width="0dp"
-            android:layout_height="36dp"
-            android:layout_marginStart="4dp"
+            android:layout_height="28dp"
+            android:layout_marginStart="3dp"
             android:layout_weight="1"
             android:background="@drawable/widget_nav_stats"
             android:clickable="true"
             android:focusable="true"
             android:gravity="center"
-            android:orientation="vertical">
+            android:orientation="horizontal">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="📊 Stats ›"
+                android:text="📊"
+                android:textSize="10sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="2dp"
+                android:singleLine="true"
+                android:text="Stats"
                 android:textColor="#FFFFFF"
-                android:textSize="9sp"
+                android:textSize="8.5sp"
                 android:textStyle="bold" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="View Charts"
-                android:textColor="#FFF3E0"
-                android:textSize="7.5sp" />
         </LinearLayout>
 
         <!-- Badges -->
         <LinearLayout
             android:id="@+id/nav_badges"
             android:layout_width="0dp"
-            android:layout_height="36dp"
-            android:layout_marginStart="4dp"
+            android:layout_height="28dp"
+            android:layout_marginStart="3dp"
             android:layout_weight="1"
             android:background="@drawable/widget_nav_badges"
             android:clickable="true"
             android:focusable="true"
             android:gravity="center"
-            android:orientation="vertical">
+            android:orientation="horizontal">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="⭐ Badges ›"
+                android:text="⭐"
+                android:textSize="10sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="2dp"
+                android:singleLine="true"
+                android:text="Badges"
                 android:textColor="#FFFFFF"
-                android:textSize="9sp"
+                android:textSize="8.5sp"
                 android:textStyle="bold" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Earn Rewards"
-                android:textColor="#FFFDE7"
-                android:textSize="7.5sp" />
         </LinearLayout>
 
         <!-- Settings -->
         <LinearLayout
             android:id="@+id/nav_settings"
             android:layout_width="0dp"
-            android:layout_height="36dp"
-            android:layout_marginStart="4dp"
+            android:layout_height="28dp"
+            android:layout_marginStart="3dp"
             android:layout_weight="1"
             android:background="@drawable/widget_nav_settings"
             android:clickable="true"
             android:focusable="true"
             android:gravity="center"
-            android:orientation="vertical">
+            android:orientation="horizontal">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="⚙️ Settings ›"
+                android:text="⚙️"
+                android:textSize="10sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="2dp"
+                android:singleLine="true"
+                android:text="Settings"
                 android:textColor="#FFFFFF"
-                android:textSize="9sp"
+                android:textSize="8.5sp"
                 android:textStyle="bold" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Customize"
-                android:textColor="#E0F7FA"
-                android:textSize="7.5sp" />
         </LinearLayout>
     </LinearLayout>
 
@@ -794,57 +753,58 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="7dp"
+        android:layout_marginTop="5dp"
         android:background="@drawable/widget_card_glass"
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:paddingStart="8dp"
-        android:paddingTop="4dp"
+        android:paddingTop="3dp"
         android:paddingEnd="8dp"
-        android:paddingBottom="4dp">
+        android:paddingBottom="3dp">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="🔔"
-            android:textSize="12sp" />
+            android:textSize="11sp" />
 
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="6dp"
+            android:layout_marginStart="5dp"
             android:layout_weight="1"
             android:orientation="vertical">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:singleLine="true"
                 android:text="Quick Actions"
                 android:textColor="#FFFFFF"
-                android:textSize="9sp"
+                android:textSize="8.5sp"
                 android:textStyle="bold" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:ellipsize="end"
-                android:maxLines="1"
+                android:singleLine="true"
                 android:text="Add water even when the app is closed"
                 android:textColor="#90CAF9"
-                android:textSize="8sp" />
+                android:textSize="7.5sp" />
         </LinearLayout>
 
         <!-- +250ml Action Pill -->
         <TextView
             android:id="@+id/btn_quick_add_250"
             android:layout_width="wrap_content"
-            android:layout_height="24dp"
+            android:layout_height="22dp"
             android:background="@drawable/widget_action_pill"
             android:clickable="true"
             android:focusable="true"
             android:gravity="center"
-            android:paddingStart="10dp"
-            android:paddingEnd="10dp"
+            android:paddingStart="9dp"
+            android:paddingEnd="9dp"
             android:text="💧 +250 ml"
             android:textColor="#00E5FF"
             android:textSize="9sp"
@@ -854,14 +814,14 @@
         <TextView
             android:id="@+id/btn_quick_add_500"
             android:layout_width="wrap_content"
-            android:layout_height="24dp"
-            android:layout_marginStart="6dp"
+            android:layout_height="22dp"
+            android:layout_marginStart="5dp"
             android:background="@drawable/widget_action_pill"
             android:clickable="true"
             android:focusable="true"
             android:gravity="center"
-            android:paddingStart="10dp"
-            android:paddingEnd="10dp"
+            android:paddingStart="9dp"
+            android:paddingEnd="9dp"
             android:text="💧 +500 ml"
             android:textColor="#40C4FF"
             android:textSize="9sp"
