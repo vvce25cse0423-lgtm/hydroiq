@@ -28,7 +28,6 @@ class _StepsScreenState extends ConsumerState<StepsScreen>
   static const _defaultGoal = 10000;
   static const _syncActive  = Duration(seconds: 1);   // when actively walking
   static const _syncIdle    = Duration(seconds: 15);  // when idle (save battery)
-  static const double _threshold = 0.75;
   static const int _ringSize = 30;
   static const _minGap  = Duration(milliseconds: 320);
   static const _maxGap  = Duration(milliseconds: 2100);
@@ -66,7 +65,6 @@ class _StepsScreenState extends ConsumerState<StepsScreen>
   // Sync
   DateTime? _lastSyncTime;
   bool      _syncing      = false;
-  bool      _hourlyLoaded = false;
   Timer?    _syncTimer;
   bool      _isActive = false; // true when walking
 

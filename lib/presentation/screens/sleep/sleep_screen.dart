@@ -841,7 +841,6 @@ class _ControlRow extends StatelessWidget {
 class _GoalRecoveryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(

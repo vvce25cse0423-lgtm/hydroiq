@@ -286,7 +286,7 @@ class _Msg {
 
 class _Bubble extends StatelessWidget {
   final _Msg msg;
-  const _Bubble({super.key, required this.msg});
+  const _Bubble({required this.msg});
   @override
   Widget build(BuildContext context) {
     final isUser = msg.role == 'user';
@@ -381,11 +381,10 @@ class _Bubble extends StatelessWidget {
 
     return Text.rich(TextSpan(children: spans));
   }
-  }
 }
 
 class _TypingIndicator extends StatelessWidget {
-  const _TypingIndicator({super.key});
+  const _TypingIndicator();
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
