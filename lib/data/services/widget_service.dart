@@ -9,7 +9,7 @@ import 'notification_service.dart';
 import 'supabase_service.dart';
 
 /// Background callback invoked by Android Home Screen Widget when
-/// user taps "+250 ml" or "+500 ml" without opening the app.
+/// user taps any quick-add button (100ml, 250ml, 500ml, 1L, etc.) without opening the app.
 @pragma('vm:entry-point')
 Future<void> widgetBackgroundCallback(Uri? uri) async {
   if (uri == null) return;
@@ -27,7 +27,7 @@ Future<void> widgetBackgroundCallback(Uri? uri) async {
       await prefs.setString('widget_last_day', todayStr);
     }
 
-    // Always use the same goal limit set by the dashboard smartGoalProvider
+    // Daily limit/goal
     final goalMl = prefs.getInt('widget_goal_ml_int') ??
         prefs.getInt(AppConstants.keyDailyGoalMl) ??
         AppConstants.defaultDailyGoalMl;
@@ -83,12 +83,14 @@ class WidgetService {
     }
   }
 
-  /// Update widget with latest hydration, steps, and sleep numbers
+  /// Update widget with latest hydration, steps, sleep, and weather
   static Future<void> updateWidget({
     required int currentMl,
     required int goalMl,
     int? steps,
     double? sleepHours,
+    String? weatherTemp,
+    String? weatherCond,
   }) async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -96,7 +98,7 @@ class WidgetService {
       final safeGoal = goalMl > 0 ? goalMl : AppConstants.defaultDailyGoalMl;
       final pct = ((currentMl / safeGoal) * 100).round().clamp(0, 100);
 
-      // Formatted numbers with commas (e.g., "1,250")
+      // Formatted numbers with commas (e.g., "1,439")
       final formattedCurrent = _formatNumber(currentMl);
       final formattedGoal = _formatNumber(safeGoal);
 
@@ -105,7 +107,7 @@ class WidgetService {
         statusText = '🎉 Daily goal achieved!';
       } else {
         final remaining = safeGoal - currentMl;
-        statusText = '💧 ${_formatNumber(remaining)} ml left today';
+        statusText = 'Keep Going! ${_formatNumber(remaining)} ml left ✨';
       }
 
       // Persist widget state so native widget and background receiver share it
@@ -124,6 +126,9 @@ class WidgetService {
           prefs.getInt('steps_stepsToday') ??
           0;
       final stepsText = '${_formatNumber(resolvedSteps)} steps';
+      final calories = (resolvedSteps * 0.04).round();
+      final distanceKm = (resolvedSteps * 0.0008).toStringAsFixed(2);
+      final stepsSubText = '$calories kcal • $distanceKm km';
 
       // Sleep processing
       if (sleepHours != null) {
@@ -132,7 +137,20 @@ class WidgetService {
       final resolvedSleep =
           sleepHours ?? prefs.getDouble('widget_sleep_hours') ?? 0.0;
       final sleepText =
-          resolvedSleep > 0 ? '${resolvedSleep.toStringAsFixed(1)} hrs' : '-- hrs';
+          resolvedSleep > 0 ? 'Sleep: ${resolvedSleep.toStringAsFixed(1)} hrs' : 'Sleep: -- hrs';
+      final sleepQuality = resolvedSleep >= 7.0
+          ? 'Good Rest'
+          : (resolvedSleep >= 5.0 ? 'Fair Rest' : 'Poor');
+
+      // Weather processing
+      if (weatherTemp != null) {
+        await prefs.setString('widget_weather_temp', weatherTemp);
+      }
+      if (weatherCond != null) {
+        await prefs.setString('widget_weather_cond', weatherCond);
+      }
+      final resolvedTemp = weatherTemp ?? prefs.getString('widget_weather_temp') ?? '28°C';
+      final resolvedCond = weatherCond ?? prefs.getString('widget_weather_cond') ?? 'Partly Cloudy';
 
       await HomeWidget.saveWidgetData<String>('current_ml', formattedCurrent);
       await HomeWidget.saveWidgetData<String>('goal_ml', formattedGoal);
@@ -140,7 +158,11 @@ class WidgetService {
       await HomeWidget.saveWidgetData<String>('percentage', '$pct%');
       await HomeWidget.saveWidgetData<String>('status_text', statusText);
       await HomeWidget.saveWidgetData<String>('steps_text', stepsText);
+      await HomeWidget.saveWidgetData<String>('steps_sub_text', stepsSubText);
       await HomeWidget.saveWidgetData<String>('sleep_text', sleepText);
+      await HomeWidget.saveWidgetData<String>('sleep_quality', sleepQuality);
+      await HomeWidget.saveWidgetData<String>('weather_temp', resolvedTemp);
+      await HomeWidget.saveWidgetData<String>('weather_cond', resolvedCond);
 
       await HomeWidget.updateWidget(
         name: appWidgetProvider,
@@ -152,8 +174,13 @@ class WidgetService {
     }
   }
 
-  /// Sync secondary metrics (steps and sleep) to the widget
-  static Future<void> syncMetrics({int? steps, double? sleepHours}) async {
+  /// Sync secondary metrics (steps, sleep, and weather) to the widget
+  static Future<void> syncMetrics({
+    int? steps,
+    double? sleepHours,
+    String? weatherTemp,
+    String? weatherCond,
+  }) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final currentMl = prefs.getInt('widget_current_ml_int') ?? 0;
@@ -165,6 +192,8 @@ class WidgetService {
         goalMl: goalMl,
         steps: steps,
         sleepHours: sleepHours,
+        weatherTemp: weatherTemp,
+        weatherCond: weatherCond,
       );
     } catch (e) {
       debugPrint('WidgetService.syncMetrics error: $e');

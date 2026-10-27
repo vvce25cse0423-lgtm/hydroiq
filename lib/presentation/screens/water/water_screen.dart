@@ -280,7 +280,12 @@ class _WaterScreenState extends ConsumerState<WaterScreen>
 
     // Keep home screen widget synchronized with the exact dashboard limit & current intake
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      WidgetService.updateWidget(currentMl: totalMl, goalMl: goalMl);
+      WidgetService.updateWidget(
+        currentMl: totalMl,
+        goalMl: goalMl,
+        weatherTemp: weather != null ? '${weather.tempC.round()}°C' : null,
+        weatherCond: weather != null ? '${weather.condition} • ${weather.cityName}' : null,
+      );
     });
 
     return Scaffold(

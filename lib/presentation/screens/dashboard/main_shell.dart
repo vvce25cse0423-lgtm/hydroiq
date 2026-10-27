@@ -1,5 +1,7 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:home_widget/home_widget.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../providers/app_providers.dart';
 import '../water/water_screen.dart';
@@ -16,6 +18,7 @@ class MainShell extends ConsumerStatefulWidget {
 
 class _MainShellState extends ConsumerState<MainShell> {
   int _currentIndex = 0;
+  StreamSubscription<Uri?>? _widgetClickSub;
 
   final List<Widget> _screens = const [
     WaterScreen(),
@@ -32,6 +35,52 @@ class _MainShellState extends ConsumerState<MainShell> {
     _TabItem(icon: Icons.auto_awesome, label: 'AI Chat'),
     _TabItem(icon: Icons.bar_chart, label: 'Stats'),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _handleInitialWidgetLaunch();
+    _widgetClickSub = HomeWidget.widgetClicked.listen(_handleWidgetUri);
+  }
+
+  Future<void> _handleInitialWidgetLaunch() async {
+    try {
+      final uri = await HomeWidget.initiallyLaunchedFromHomeWidget();
+      _handleWidgetUri(uri);
+    } catch (_) {}
+  }
+
+  void _handleWidgetUri(Uri? uri) {
+    if (uri == null || !mounted) return;
+    final host = uri.host.toLowerCase();
+    final path = uri.path.toLowerCase();
+
+    if (host == 'steps' || path.contains('steps')) {
+      setState(() => _currentIndex = 1);
+    } else if (host == 'sleep' || path.contains('sleep')) {
+      setState(() => _currentIndex = 2);
+    } else if (host == 'ai' || path.contains('ai')) {
+      setState(() => _currentIndex = 3);
+    } else if (host == 'stats' || path.contains('stats')) {
+      setState(() => _currentIndex = 4);
+    } else if (host == 'weather' || path.contains('weather')) {
+      Navigator.pushNamed(context, '/weather');
+    } else if (host == 'settings' || path.contains('settings')) {
+      Navigator.pushNamed(context, '/settings');
+    } else if (host == 'badges' || path.contains('badges')) {
+      setState(() => _currentIndex = 4);
+    } else if (host == 'voice' || path.contains('voice')) {
+      setState(() => _currentIndex = 0);
+    } else if (host == 'open' || path.contains('open') || host == 'hydration') {
+      setState(() => _currentIndex = 0);
+    }
+  }
+
+  @override
+  void dispose() {
+    _widgetClickSub?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -54,7 +103,6 @@ class _MainShellState extends ConsumerState<MainShell> {
                 return GestureDetector(
                   onTap: () {
                     setState(() => _currentIndex = i);
-                    // Reload today logs when switching to any tab
                     if (i == 4) {
                       ref.invalidate(todayLogsProvider);
                     }
