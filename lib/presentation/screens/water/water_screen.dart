@@ -283,8 +283,8 @@ class _WaterScreenState extends ConsumerState<WaterScreen>
       WidgetService.updateWidget(
         currentMl: totalMl,
         goalMl: goalMl,
-        weatherTemp: weather != null ? '${weather.tempC.round()}°C' : null,
-        weatherCond: weather != null ? '${weather.condition} • ${weather.cityName}' : null,
+        weatherTemp: weather != null ? '${weather.temperatureC.round()}°C' : null,
+        weatherCond: weather != null ? '${weather.condition} • ${weather.city}' : null,
       );
     });
 

@@ -96,14 +96,3 @@ jobs:
           name: HydroIQ-APK-${{ github.run_number }}
           path: build/app/outputs/flutter-apk/app-release.apk
           retention-days: 30
-
-      - name: Create Release
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: v1.0.${{ github.run_number }}
-          name: HydroIQ v1.0.${{ github.run_number }}
-          body: Auto release — Flutter 3.24.5 · Java 17 · commit ${{ github.sha }}
-          files: build/app/outputs/flutter-apk/app-release.apk
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
