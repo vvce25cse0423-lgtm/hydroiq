@@ -116,8 +116,6 @@ class HydroIQWidgetProvider : HomeWidgetProvider() {
                     setTextViewText(R.id.widget_limit_val, "$goalMl ml")
                     setTextViewText(R.id.widget_weather_temp, weatherTemp)
                     setTextViewText(R.id.widget_weather_cond, weatherCond)
-                    setProgressBar(R.id.widget_progress_bar, 100, progress, false)
-                    setTextViewText(R.id.widget_progress_text, percentage)
                     setTextViewText(R.id.widget_steps_val, stepsText)
                     setTextViewText(R.id.widget_steps_sub, stepsSubText)
                     setTextViewText(R.id.widget_sleep_val, sleepText)
@@ -156,7 +154,6 @@ class HydroIQWidgetProvider : HomeWidgetProvider() {
                     setOnClickPendingIntent(R.id.widget_header_area, openDashboard)
                     setOnClickPendingIntent(R.id.widget_gauge_area, openDashboard)
                     setOnClickPendingIntent(R.id.nav_hydration, openDashboard)
-                    setOnClickPendingIntent(R.id.card_progress, openDashboard)
 
                     // Weather card launches Weather screen
                     setOnClickPendingIntent(R.id.widget_weather_card, createLaunchIntent("hydroiq://weather"))
