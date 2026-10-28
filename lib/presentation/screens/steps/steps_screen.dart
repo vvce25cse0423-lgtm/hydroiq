@@ -386,7 +386,7 @@ class _StepsScreenState extends ConsumerState<StepsScreen>
     for (int h = 0; h < 24; h++) {
       _hourlySteps[h] = prefs.getInt('steps_hourly_${_uid}_${today}_$h') ?? 0;
     }
-    if (mounted) setState(() => _hourlyLoaded = true);
+    if (mounted) setState(() {});
   }
 
   void _updateHourlySteps(int totalSteps) async {
