@@ -16,9 +16,6 @@ class SplashScreen extends ConsumerStatefulWidget {
 
 class _SplashScreenState extends ConsumerState<SplashScreen>
     with TickerProviderStateMixin {
-  late AnimationController _fadeController;
-  late Animation<double> _fadeAnim;
-
   late AnimationController _loadingController;
   late Animation<double> _progressAnim;
 
@@ -29,18 +26,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   void initState() {
     super.initState();
 
-    // 1. Overall screen fade-in
-    _fadeController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 700),
-    );
-    _fadeAnim = CurvedAnimation(
-      parent: _fadeController,
-      curve: Curves.easeIn,
-    );
-    _fadeController.forward();
-
-    // 2. Graphical loading bar from left to right (2.5 seconds)
+    // 1. Graphical loading bar from left to right (2.5 seconds)
     _loadingController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 2500),
@@ -50,7 +36,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       curve: Curves.easeInOutCubic,
     );
 
-    // 3. Shimmer reflection traversing the liquid fill
+    // 2. Shimmer reflection traversing the liquid fill
     _shimmerController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1400),
@@ -68,6 +54,20 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     _loadingController.forward();
 
     final startTime = DateTime.now();
+
+    // Ensure Supabase is initialized before checking auth
+    if (AppConstants.isSupabaseConfigured) {
+      try {
+        Supabase.instance.client;
+      } catch (_) {
+        try {
+          await Supabase.initialize(
+            url: AppConstants.supabaseUrl,
+            anonKey: AppConstants.supabaseAnonKey,
+          );
+        } catch (_) {}
+      }
+    }
 
     final prefs = await SharedPreferences.getInstance();
     final onboardingDone =
@@ -149,7 +149,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
   @override
   void dispose() {
-    _fadeController.dispose();
     _loadingController.dispose();
     _shimmerController.dispose();
     super.dispose();
@@ -162,9 +161,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
     return Scaffold(
       backgroundColor: const Color(0xFF02143B),
-      body: FadeTransition(
-        opacity: _fadeAnim,
-        child: Stack(
+      body: Stack(
           children: [
             // High-resolution clean splash artwork
             Positioned.fill(
@@ -339,7 +336,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
             ),
           ],
         ),
-      ),
     );
   }
 }

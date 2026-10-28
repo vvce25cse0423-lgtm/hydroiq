@@ -31,7 +31,19 @@ Future<void> main() async {
     DeviceOrientation.portraitDown,
   ]);
 
-  // Supabase — initialize only if credentials are provided at build/runtime
+  _container = ProviderContainer();
+
+  // Launch app immediately so the HydroIQ splash screen appears instantly without delay
+  runApp(UncontrolledProviderScope(
+    container: _container,
+    child: const HydroIQApp(),
+  ));
+
+  // Initialize background services asynchronously without blocking the UI
+  _initServicesAsync(_container);
+}
+
+void _initServicesAsync(ProviderContainer container) async {
   if (AppConstants.isSupabaseConfigured) {
     try {
       await Supabase.initialize(
@@ -43,20 +55,12 @@ Future<void> main() async {
     }
   }
 
-  _container = ProviderContainer();
-
-  // Wrap non-critical startup services so crash in one doesn't kill the app
   try { await BackgroundService.initialize(); } catch (_) {}
   try { await NotificationService().initialize(); } catch (_) {}
   try { await NotificationService().scheduleHydrationReminders(); } catch (_) {}
   try { await WidgetService.initialize(); } catch (_) {}
-  try { await _processPendingNotificationAction(_container); } catch (_) {}
-  try { await _processPendingWidgetAction(_container); } catch (_) {}
-
-  runApp(UncontrolledProviderScope(
-    container: _container,
-    child: const HydroIQApp(),
-  ));
+  try { await _processPendingNotificationAction(container); } catch (_) {}
+  try { await _processPendingWidgetAction(container); } catch (_) {}
 }
 
 Future<void> _processPendingWidgetAction(ProviderContainer container) async {
