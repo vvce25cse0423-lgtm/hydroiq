@@ -74,11 +74,36 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
         prefs.getBool(AppConstants.keyOnboardingDone) ?? false;
     final permissionsSetup =
         prefs.getBool(AppConstants.keyPermissionsSetup) ?? false;
+    final wasLoggedIn =
+        prefs.getBool('is_logged_in') ?? false;
 
-    final user = AppConstants.isSupabaseConfigured
+    // Detect user session
+    var user = AppConstants.isSupabaseConfigured
         ? (Supabase.instance.client.auth.currentSession?.user ??
             Supabase.instance.client.auth.currentUser)
         : null;
+
+    // If previously logged in but currentSession is still completing restoration,
+    // give Supabase auth state change up to 1500ms to resolve before deciding
+    if (user == null && wasLoggedIn && AppConstants.isSupabaseConfigured) {
+      try {
+        await Supabase.instance.client.auth.onAuthStateChange
+            .firstWhere((data) => data.session != null)
+            .timeout(const Duration(milliseconds: 1500));
+        user = Supabase.instance.client.auth.currentSession?.user ??
+            Supabase.instance.client.auth.currentUser;
+      } catch (_) {
+        user = Supabase.instance.client.auth.currentUser;
+      }
+    }
+
+    if (user != null) {
+      await prefs.setBool('is_logged_in', true);
+      await prefs.setString(AppConstants.keyUserId, user.id);
+      if (user.email != null) {
+        await prefs.setString(AppConstants.keyUserEmail, user.email!);
+      }
+    }
 
     ref.invalidate(userProfileProvider);
     ref.invalidate(todayLogsProvider);

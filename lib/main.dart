@@ -31,19 +31,7 @@ Future<void> main() async {
     DeviceOrientation.portraitDown,
   ]);
 
-  _container = ProviderContainer();
-
-  // Launch app immediately so the HydroIQ splash screen appears instantly without delay
-  runApp(UncontrolledProviderScope(
-    container: _container,
-    child: const HydroIQApp(),
-  ));
-
-  // Initialize background services asynchronously without blocking the UI
-  _initServicesAsync(_container);
-}
-
-void _initServicesAsync(ProviderContainer container) async {
+  // Initialize Supabase synchronously so auth session is restored before UI renders
   if (AppConstants.isSupabaseConfigured) {
     try {
       await Supabase.initialize(
@@ -55,6 +43,19 @@ void _initServicesAsync(ProviderContainer container) async {
     }
   }
 
+  _container = ProviderContainer();
+
+  // Launch app with splash screen
+  runApp(UncontrolledProviderScope(
+    container: _container,
+    child: const HydroIQApp(),
+  ));
+
+  // Initialize non-critical background services asynchronously without blocking the UI
+  _initServicesAsync(_container);
+}
+
+void _initServicesAsync(ProviderContainer container) async {
   try { await BackgroundService.initialize(); } catch (_) {}
   try { await NotificationService().initialize(); } catch (_) {}
   try { await NotificationService().scheduleHydrationReminders(); } catch (_) {}

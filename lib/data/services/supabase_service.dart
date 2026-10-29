@@ -1,3 +1,4 @@
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/constants/app_constants.dart';
 import '../models/app_models.dart';
@@ -42,11 +43,23 @@ class SupabaseService {
   }
 
   Future<void> signOut() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('is_logged_in', false);
+      await prefs.remove(AppConstants.keyUserId);
+      await prefs.remove(AppConstants.keyUserEmail);
+    } catch (_) {}
     try { await _client.auth.signOut(); } catch (_) {}
   }
 
   /// Deletes all user data then signs out.
   Future<void> deleteAccount(String userId) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('is_logged_in', false);
+      await prefs.remove(AppConstants.keyUserId);
+      await prefs.remove(AppConstants.keyUserEmail);
+    } catch (_) {}
     try { await _client.from('water_logs').delete().eq('user_id', userId); } catch (_) {}
     try { await _client.from('sleep_logs').delete().eq('user_id', userId); } catch (_) {}
     try { await _client.from('chat_messages').delete().eq('user_id', userId); } catch (_) {}

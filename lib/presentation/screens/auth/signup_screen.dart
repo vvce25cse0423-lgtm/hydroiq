@@ -113,6 +113,17 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
   Future<void> _navigateAfterAuth() async {
     if (!mounted) return;
     final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('is_logged_in', true);
+    final user = AppConstants.isSupabaseConfigured
+        ? (Supabase.instance.client.auth.currentSession?.user ??
+            Supabase.instance.client.auth.currentUser)
+        : null;
+    if (user != null) {
+      await prefs.setString(AppConstants.keyUserId, user.id);
+      if (user.email != null) {
+        await prefs.setString(AppConstants.keyUserEmail, user.email!);
+      }
+    }
     final permissionsSetup = prefs.getBool(AppConstants.keyPermissionsSetup) ?? false;
     // New user — always go to profile setup first
     if (!permissionsSetup) {

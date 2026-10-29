@@ -26,6 +26,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   void initState() {
     super.initState();
     if (AppConstants.isSupabaseConfigured) {
+      final session = Supabase.instance.client.auth.currentSession;
+      if (session != null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            _navigateAfterAuth(session.user.id);
+          }
+        });
+      }
+
       _authSub = Supabase.instance.client.auth.onAuthStateChange.listen((data) {
         final session = data.session;
         if (session != null && mounted) {
@@ -50,6 +59,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       if (!mounted) return;
 
       if (res.user != null) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setBool('is_logged_in', true);
+        await prefs.setString(AppConstants.keyUserId, res.user!.id);
+        if (res.user!.email != null) {
+          await prefs.setString(AppConstants.keyUserEmail, res.user!.email!);
+        }
+
         // Reload profile provider after sign-in
         ref.invalidate(userProfileProvider);
         // Schedule hydration notifications
@@ -90,6 +106,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Future<void> _navigateAfterAuth(String userId) async {
     if (!mounted) return;
     final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('is_logged_in', true);
+    await prefs.setString(AppConstants.keyUserId, userId);
     final permissionsSetup = prefs.getBool(AppConstants.keyPermissionsSetup) ?? false;
 
     try {
