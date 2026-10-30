@@ -1,14 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- Solid dark blue background matching the splash artwork (#02143B) -->
-    <item>
-        <color android:color="#02143B" />
-    </item>
-
-    <!-- High-resolution HydroIQ splash background image -->
-    <item>
-        <bitmap
-            android:gravity="fill"
-            android:src="@drawable/splash_background" />
-    </item>
+    <item android:drawable="@android:color/transparent" />
 </layer-list>
