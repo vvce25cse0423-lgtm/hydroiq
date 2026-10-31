@@ -167,17 +167,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     }
 
     // Exact bounding box of the container inside the template:
-    // Left: 41px, Top: 366px, Width: 378px, Height: 436px, Corner Radius: 28px
+    // Left: 41px, Top: 358px, Width: 378px, Corner Radius: 28px
     final double lockedLeft   = offsetX + renderedW * (41.0 / imgW);
-    final double lockedTop    = offsetY + renderedH * (366.0 / imgH);
+    final double lockedTop    = offsetY + renderedH * (358.0 / imgH);
     final double lockedWidth  = renderedW * (378.0 / imgW);
-    final double lockedHeight = renderedH * (436.0 / imgH);
     final double lockedRadius = renderedW * (28.0 / imgW);
 
-    // Compact card content height is ~350dp.
+    // Compact card content height is ~348dp.
     // Ensure the card top leaves enough space above the screen bottom so all elements
     // (down to "Don't have an account? Sign Up") are 100% visible on screen without scrolling.
-    const double approxCardHeight = 352.0;
+    const double approxCardHeight = 348.0;
     final double maxAllowedTop = size.height - approxCardHeight - 16.0;
     final double baseTop = math.min(lockedTop, math.max(16.0, maxAllowedTop));
 
@@ -207,7 +206,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           ),
 
           // 2. The Locked "Welcome back!" Container
-          // Anchored directly over the template's container, fully visible from title
+          // Anchored cleanly below the divider, fully visible from title
           // to "Don't have an account? Sign Up" without requiring any scrolling.
           AnimatedPositioned(
             duration: const Duration(milliseconds: 200),
@@ -216,7 +215,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             top: activeTop,
             width: lockedWidth,
             child: Container(
-              constraints: BoxConstraints(minHeight: lockedHeight),
               decoration: BoxDecoration(
                 color: const Color(0xFFF9FBFE), // Solid clean frosted white background
                 borderRadius: BorderRadius.circular(lockedRadius),
