@@ -7,28 +7,50 @@ $h = $bmp.Height # 1024
 
 $cleanBmp = New-Object System.Drawing.Bitmap($bmp)
 
-# Sample background color around divider y = 346-348 across width
-$colSample = @{}
-for ($x = 0; $x -lt $w; $x++) {
-    $c1 = $bmp.GetPixel($x, 346)
-    $c2 = $bmp.GetPixel($x, 348)
-    $colSample[$x] = [System.Drawing.Color]::FromArgb(
-        255,
-        [int](($c1.R + $c2.R) / 2),
-        [int](($c1.G + $c2.G) / 2),
-        [int](($c1.B + $c2.B) / 2)
-    )
-}
+# The container in signup_screen_raw.png is located at:
+# x: from ~35 to ~425
+# y: from ~350 to ~864
+# We will completely inpaint / fill this area with the natural scenery!
+# Let's inspect the surrounding pixels:
+# Above (y = 346): soft sky/foliage (R ~ 80-140, G ~ 150-200, B ~ 170-230)
+# Left (x = 30): green foliage (R ~ 120-150, G ~ 170-200, B ~ 110-130)
+# Right (x = 430): light foliage (R ~ 80-120, G ~ 160-180, B ~ 170-190)
+# Below (y = 868): blue towel & wooden desk tones (R ~ 80-110, G ~ 160-180, B ~ 200-220)
 
-# Fill/blend from y = 350 down to y = 460 across container width (x: 25 to 435)
-for ($y = 350; $y -le 460; $y++) {
-    for ($x = 25; $x -le 435; $x++) {
-        $cTop = $colSample[$x]
-        $cleanBmp.SetPixel($x, $y, $cTop)
+for ($y = 350; $y -le 865; $y++) {
+    $tY = ($y - 350.0) / (865.0 - 350.0) # 0.0 at top, 1.0 at bottom
+    
+    # Sample left and right scenery pixels at this y
+    $cLeft = $bmp.GetPixel(30, $y)
+    $cRight = $bmp.GetPixel(430, $y)
+    
+    # Also sample top and bottom for vertical gradient influence
+    $cTop = $bmp.GetPixel(230, 346)
+    $cBottom = $bmp.GetPixel(230, 868)
+    
+    for ($x = 30; $x -le 430; $x++) {
+        $tX = ($x - 30.0) / (430.0 - 30.0) # 0.0 at left, 1.0 at right
+        
+        # Horizontal blend between left and right scenery
+        $rHoriz = $cLeft.R * (1.0 - $tX) + $cRight.R * $tX
+        $gHoriz = $cLeft.G * (1.0 - $tX) + $cRight.G * $tX
+        $bHoriz = $cLeft.B * (1.0 - $tX) + $cRight.B * $tX
+        
+        # Vertical blend between top and bottom scenery
+        $rVert = $cTop.R * (1.0 - $tY) + $cBottom.R * $tY
+        $gVert = $cTop.G * (1.0 - $tY) + $cBottom.G * $tY
+        $bVert = $cTop.B * (1.0 - $tY) + $cBottom.B * $tY
+        
+        # Combine horizontal bokeh and vertical ambient lighting (60% horiz, 40% vert)
+        $rFinal = [Math]::Min(255, [Math]::Max(0, [int]($rHoriz * 0.55 + $rVert * 0.45)))
+        $gFinal = [Math]::Min(255, [Math]::Max(0, [int]($gHoriz * 0.55 + $gVert * 0.45)))
+        $bFinal = [Math]::Min(255, [Math]::Max(0, [int]($bHoriz * 0.55 + $bVert * 0.45)))
+        
+        $cleanBmp.SetPixel($x, $y, [System.Drawing.Color]::FromArgb(255, $rFinal, $gFinal, $bFinal))
     }
 }
 
-# Now upscale to high-resolution 1080 x 2404
+# Upscale to high-resolution 1080 x 2404
 $targetW = 1080
 $targetH = 2404
 
@@ -54,4 +76,4 @@ $highRes.Dispose()
 $cleanBmp.Dispose()
 $bmp.Dispose()
 
-Write-Host "Created assets\images\signup_background.jpg successfully."
+Write-Host "Created seamless assets\images\signup_background.jpg with NO inner container."

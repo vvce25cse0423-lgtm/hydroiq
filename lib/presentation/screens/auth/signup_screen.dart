@@ -270,7 +270,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                 borderRadius: BorderRadius.circular(lockedRadius),
                 child: Padding(
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                      const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
                   child: Form(
                     key: _formKey,
                     child: Column(
